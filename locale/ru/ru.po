@@ -1,0 +1,101 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid   ""
+msgstr  "Project-Id-Version: PACKAGE VERSION\n"
+        "Report-Msgid-Bugs-To: \n"
+        "POT-Creation-Date: 2014-09-11 12:59+0400\n"
+        "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+        "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+        "Language-Team: LANGUAGE <LL@li.org>\n"
+        "Language: \n"
+        "MIME-Version: 1.0\n"
+        "Content-Type: text/plain; charset=koi8-r\n"
+        "Content-Transfer-Encoding: 8bit\n"
+
+#. / "Не могу найти поддержку v4l2!"
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:195
+msgid   "Can't find v4l2 support!"
+msgstr  ""
+
+#. / "Не могу подготовить видеоустройство к работе"
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/main.c:135
+#, fuzzy
+msgid   "Can't prepare video device"
+msgstr  "путь к устройству видеозахвата"
+
+#. / "Не могу выбрать требуемый канал"
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:152
+msgid   "Can't set given channel"
+msgstr  ""
+
+#. / "Не могу идентифицировать"
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:130
+msgid   "Cannot identify"
+msgstr  ""
+
+#. / "Не могу открыть"
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:141
+msgid   "Cannot open"
+msgstr  ""
+
+#. / "Текущий вход"
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:146
+msgid   "Current input"
+msgstr  ""
+
+#. / "Кадр сохранен"
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:58
+msgid   "Frame saved"
+msgstr  ""
+
+#. / "Игнорирую аргумент[ы]:"
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/cmdlnopts.c:137
+msgid   "Ignore argument[s]:"
+msgstr  "Игнорирую аргумент[ы]:"
+
+#. / "Нет такого канала"
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:89
+msgid   "No such channel"
+msgstr  ""
+
+#. ptr = memcpy(&M, &Mdefault, sizeof(M)); assert(ptr);
+#. G.Mirror = &M;
+#. format of help: "Usage: progname [args]\n"
+#. / "Использование: %s [аргументы]\n\n\tГде аргументы:\n"
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/cmdlnopts.c:131
+#, c-format
+msgid   "Usage: %s [args]\n"
+        "\n"
+        "\tWhere args are:\n"
+msgstr  "Использование: %s [аргументы]\n"
+        "\n"
+        "\tГде аргументы:\n"
+
+#. / "номер канала захвата"
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/cmdlnopts.c:46
+msgid   "capture channel number"
+msgstr  ""
+
+#. / "путь к устройству видеозахвата"
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/cmdlnopts.c:44
+msgid   "input video device"
+msgstr  "путь к устройству видеозахвата"
+
+#. / "не является символьным устройством"
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:135
+msgid   "is not character device file"
+msgstr  ""
+
+#. / "отобразить доступный список каналов"
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/cmdlnopts.c:48
+msgid   "list avaiable channels"
+msgstr  ""
+
+#. / "отобразить это сообщение"
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/cmdlnopts.c:42
+msgid   "show this help"
+msgstr  "отобразить это сообщение"

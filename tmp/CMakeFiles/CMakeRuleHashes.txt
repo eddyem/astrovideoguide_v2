@@ -1,0 +1,4 @@
+# Hashes of file build rules.
+2e261663f0a259ea0f80d945a1eb2e67 ../locale/ru/LC_MESSAGES/tvguide.mo
+c9696efb4f38fae83add84ba1371106d ../locale/ru/messages.po
+cfdadeb425dc65bab89945156ab1216d ../locale/ru/ru.po
