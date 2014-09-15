@@ -1,1 +1,0 @@
-/usr/bin/cc      CMakeFiles/tvguide.dir/capture.c.o CMakeFiles/tvguide.dir/parceargs.c.o CMakeFiles/tvguide.dir/main.c.o CMakeFiles/tvguide.dir/cmdlnopts.c.o  -o tvguide -rdynamic -lavformat -lavcodec -lswscale -lavutil -lavdevice 
