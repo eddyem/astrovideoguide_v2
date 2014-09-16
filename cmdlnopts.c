@@ -38,13 +38,13 @@ glob_pars Gdefault = {
  *	name	has_arg	flag	val		type		argptr			help
 */
 myoption cmdlnopts[] = {
-	/// "п╬я┌п╬п╠я─п╟п╥п╦я┌я▄ я█я┌п╬ я│п╬п╬п╠я┴п╣п╫п╦п╣"
+	/// "отобразить это сообщение"
 	{"help",	0,	NULL,	'h',	arg_int,	APTR(&help),		N_("show this help")},
-	/// "п©я┐я┌я▄ п╨ я┐я│я┌я─п╬п╧я│я┌п╡я┐ п╡п╦п╢п╣п╬п╥п╟я┘п╡п╟я┌п╟"
+	/// "путь к устройству видеозахвата"
 	{"videodev",1,	NULL,	'd',	arg_string,	APTR(&G.videodev),	N_("input video device")},
-	/// "п╫п╬п╪п╣я─ п╨п╟п╫п╟п╩п╟ п╥п╟я┘п╡п╟я┌п╟"
+	/// "номер канала захвата"
 	{"channel", 1,	NULL,	'n',	arg_int,	APTR(&G.videochannel),N_("capture channel number")},
-	/// "п╬я┌п╬п╠я─п╟п╥п╦я┌я▄ п╢п╬я│я┌я┐п©п╫я▀п╧ я│п©п╦я│п╬п╨ п╨п╟п╫п╟п╩п╬п╡"
+	/// "отобразить доступный список каналов"
 	{"list-channels",0,NULL,'l',	arg_none,	APTR(&G.listchannels),N_("list avaiable channels")},
 	// ...
 	end_option
@@ -127,13 +127,13 @@ glob_pars *parce_args(int argc, char **argv){
 //	ptr = memcpy(&M, &Mdefault, sizeof(M)); assert(ptr);
 //	G.Mirror = &M;
 	// format of help: "Usage: progname [args]\n"
-	/// "п≤я│п©п╬п╩я▄п╥п╬п╡п╟п╫п╦п╣: %s [п╟я─пЁя┐п╪п╣п╫я┌я▀]\n\n\tп⌠п╢п╣ п╟я─пЁя┐п╪п╣п╫я┌я▀:\n"
+	/// "Использование: %s [аргументы]\n\n\tГде аргументы:\n"
 	change_helpstring(_("Usage: %s [args]\n\n\tWhere args are:\n"));
 	// parse arguments
 	parceargs(&argc, &argv, cmdlnopts);
 	if(help) showhelp(-1, cmdlnopts);
 	if(argc > 0){
-		/// "п≤пЁп╫п╬я─п╦я─я┐я▌ п╟я─пЁя┐п╪п╣п╫я┌[я▀]:"
+		/// "Игнорирую аргумент[ы]:"
 		printf("\n%s\n", _("Ignore argument[s]:"));
 		for (i = 0; i < argc; i++)
 			printf("\t%s\n", argv[i]);

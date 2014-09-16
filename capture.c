@@ -64,7 +64,7 @@ void SaveFrame(AVFrame *pFrame, int iFrame){
 	for(y = 0; y < h; y++)
 		fwrite(pFrame->data[0]+y*l, 1, w*3, pFile);
 	fclose(pFile);
-	/// "п п╟п╢я─ я│п╬я┘я─п╟п╫п╣п╫"
+	/// "Кадр сохранен"
 	green("%s\n", _("Frame saved"));
 }
 
@@ -95,7 +95,7 @@ int list_input(int fd, int ch_num){
 	vin.index = ch_num;
 	DBG("ioctl: VIDIOC_ENUMINPUT\n");
 	if(ioctl(fd, VIDIOC_ENUMINPUT, &vin) == -1){
-		/// "п²п╣я┌ я┌п╟п╨п╬пЁп╬ п╨п╟п╫п╟п╩п╟"
+		/// "Нет такого канала"
 		WARN(_("No such channel"));
 		return 0;
 	}
@@ -137,29 +137,29 @@ int grab_set_chan(char *devname, int ch_num){
 	if(!devname) exit(EXIT_FAILURE);
 	struct stat st;
 	if(-1 == stat(devname, &st)){
-		/// "п²п╣ п╪п╬пЁя┐ п╦п╢п╣п╫я┌п╦я└п╦я├п╦я─п╬п╡п╟я┌я▄"
+		/// "Не могу идентифицировать"
 		WARN("%s '%s'", _("Cannot identify"), devname);
 		return 0;
 	}
 	if(!S_ISCHR(st.st_mode)){
-		/// "п╫п╣ я▐п╡п╩я▐п╣я┌я│я▐ я│п╦п╪п╡п╬п╩я▄п╫я▀п╪ я┐я│я┌я─п╬п╧я│я┌п╡п╬п╪"
+		/// "не является символьным устройством"
 		WARNX("'%s' %s\n", devname, _("is not character device file"));
 		return 0;
 	}
 	grab_fd = open(devname, O_RDWR | O_NONBLOCK, 0);
 	if(-1 == grab_fd){
-		/// "п²п╣ п╪п╬пЁя┐ п╬я┌п╨я─я▀я┌я▄"
+		/// "Не могу открыть"
 		WARN("%s '%s'", _("Cannot open"), devname);
 		return 0;
 	}
 	if(ioctl(grab_fd, VIDIOC_G_INPUT, &input) == 0){
-		/// "п╒п╣п╨я┐я┴п╦п╧ п╡я┘п╬п╢"
+		/// "Текущий вход"
 		printf("%s: %d\n", _("Current input"), input);
 	}
 	if(input != ch_num){
 		if(list_input(grab_fd, ch_num)){
 			if(-1 == ioctl (grab_fd, VIDIOC_S_INPUT, &ch_num)){
-				/// "п²п╣ п╪п╬пЁя┐ п╡я▀п╠я─п╟я┌я▄ я┌я─п╣п╠я┐п╣п╪я▀п╧ п╨п╟п╫п╟п╩"
+				/// "Не могу выбрать требуемый канал"
 				WARN(_("Can't set given channel"));
 				return 0;
 			}
@@ -195,7 +195,7 @@ int prepare_videodev(char *videodev, int channel){
 	// find v4l2 format support
 	ifmt = av_find_input_format("video4linux2");
 	if(!ifmt){
-		/// "п²п╣ п╪п╬пЁя┐ п╫п╟п╧я┌п╦ п©п╬п╢п╢п╣я─п╤п╨я┐ v4l2!"
+		/// "Не могу найти поддержку v4l2!"
 		WARNX("%s\n", _("Can't find v4l2 support!"));
 		return 0;
 	}
@@ -209,7 +209,7 @@ int prepare_videodev(char *videodev, int channel){
 	// Open video file
 	if((averr = avformat_open_input(&pFormatCtx, videodev, ifmt, &optionsDict)) < 0){
 		av_strerror(averr, averrbuf, 255);
-		/// "п²п╣ п╪п╬пЁя┐ п╬я┌п╨я─я▀я┌я▄ я┐я│я┌я─п╬п╧я│я┌п╡п╬"
+		/// "Не могу открыть устройство"
 		WARNX("%s %s! (%s)\n", _("Can't open device"), videodev, averrbuf);
 		return 0; // Couldn't open file
 	}
@@ -217,7 +217,7 @@ int prepare_videodev(char *videodev, int channel){
 	// Retrieve stream information
 	if((averr = avformat_find_stream_info(pFormatCtx, NULL) < 0)){
 		av_strerror(averr, averrbuf, 255);
-		/// "п²п╣ п╪п╬пЁя┐ п╬п╠п╫п╟я─я┐п╤п╦я┌я▄ п╦п╫я└п╬я─п╪п╟я├п╦я▌ п╬ п©п╬я┌п╬п╨п╣"
+		/// "Не могу обнаружить информацию о потоке"
 		WARNX("%s: %s!", _("Can't find stream information"), averrbuf);
 		return 0; // Couldn't find stream information
 	}
@@ -234,7 +234,7 @@ int prepare_videodev(char *videodev, int channel){
 			break;
 		}
 	if(videoStream == -1){
-		/// "п²п╣ п╪п╬пЁя┐ п╫п╟п╧я┌п╦ п╡п╦п╢п╣п╬п©п╬я┌п╬п╨!"
+		/// "Не могу найти видеопоток!"
 		WARNX("Can't find video stream!");
 		return 0; // Didn't find a video stream
 	}
@@ -245,14 +245,14 @@ int prepare_videodev(char *videodev, int channel){
 	// Find the decoder for the video stream
 	pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
 	if(pCodec == NULL){
-		/// "п²п╣ п©п╬п╢п╢п╣я─п╤п╦п╡п╟п╣п╪я▀п╧ п╨п╬п╢п╣п╨!"
+		/// "Не поддерживаемый кодек!"
 		WARNX("Unsupported codec!");
 		return 0; // Codec not found
 	  }
 	// Open codec
 	if((averr = avcodec_open2(pCodecCtx, pCodec, &optionsDict)) < 0){
 		av_strerror(averr, averrbuf, 255);
-		/// "п²п╣ п╪п╬пЁя┐ п╬я┌п╨я─я▀я┌я▄ п╨п╬п╢п╣п╨!"
+		/// "Не могу открыть кодек!"
 		WARNX("%s: %s!", _("Can't open codec!"), averrbuf);
 		return 0; // Could not open codec
 	}
@@ -300,7 +300,7 @@ int prepare_videodev(char *videodev, int channel){
  */
 int capture_frame(int istart, int N){
 	if(!videodev_prepared){
-		/// "п▓п╦п╢п╣п╬я┐я│я┌я─п╬п╧я│я┌п╡п╬ п╫п╣ п╠я▀п╩п╬ п╦п╫п╦я├п╦п╟п╩п╦п╥п╦я─п╬п╡п╟п╫п╬ я└я┐п╫п╨я├п╦п╣п╧ prepare_videodev"
+		/// "Видеоустройство не было инициализировано функцией prepare_videodev"
 		WARNX("Video device wasn't prepared with prepare_videodev");
 		return 0;
 	}

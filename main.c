@@ -132,12 +132,14 @@ int main(int argc, char **argv){
 	if(Global_parameters->listchannels)
 		list_all_inputs(Global_parameters->videodev);
 	if(!prepare_videodev(Global_parameters->videodev, Global_parameters->videochannel)){
-		/// "ÐÐµ Ð¼Ð¾Ð³Ñƒ Ð¿Ð¾Ð´Ð³Ð¾Ñ‚Ð¾Ð²Ð¸Ñ‚ÑŒ Ð²Ð¸Ð´ÐµÐ¾ÑƒÑÑ‚Ñ€Ð¾Ð¹ÑÑ‚Ð²Ð¾ Ðº Ñ€Ð°Ð±Ð¾Ñ‚Ðµ"
+		/// "îÅ ÍÏÇÕ ÐÏÄÇÏÔÏ×ÉÔØ ×ÉÄÅÏÕÓÔÒÏÊÓÔ×Ï Ë ÒÁÂÏÔÅ"
 		ERR(_("Can't prepare video device"));
 	}
 	capture_frame(1,3);
 	free_videodev();
+	sleep(2);
 	prepare_videodev(Global_parameters->videodev, Global_parameters->videochannel);
+	sleep(2);
 	capture_frame(4,3);
 	free_videodev();
 	return 0;

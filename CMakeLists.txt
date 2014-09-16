@@ -98,13 +98,14 @@ add_custom_command(
 	COMMAND enconv ${PO_FILE}
 	DEPENDS ${SOURCES}
 )
-add_custom_command(
-	OUTPUT ${RU_FILE}
+# we need this to prewent ru.po from deleting by make clean
+add_custom_target(
+	RU_FILE
 	COMMAND [ -f ${RU_FILE} ] && ${GETTEXT_MSGMERGE_EXECUTABLE} -Uis ${RU_FILE} ${PO_FILE} || cp ${PO_FILE} ${RU_FILE}
 	DEPENDS ${PO_FILE}
 )
 add_custom_command(
 	OUTPUT ${MO_FILE}
-	COMMAND ${GETTEXT_MSGFMT_EXECUTABLE} ${RU_FILE} -o ${MO_FILE}
-	DEPENDS ${RU_FILE}
+	COMMAND make RU_FILE && ${GETTEXT_MSGFMT_EXECUTABLE} ${RU_FILE} -o ${MO_FILE}
+	DEPENDS ${PO_FILE}
 )
