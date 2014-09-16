@@ -35,8 +35,18 @@
 
 #include "main.h"
 
-// global format context for capture_frame
+// global variables for capture_frame
+int videoStream;
 AVFormatContext *pFormatCtx = NULL;
+uint8_t *buffer = NULL;
+AVFrame *pFrame = NULL;
+AVFrame *pFrameRGB = NULL;
+AVCodecContext *pCodecCtx = NULL;
+struct SwsContext *sws_ctx = NULL;
+// flag saying that device is ready
+int videodev_prepared = 0;
+
+
 
 /**
  * Test function to save captured frame to a ppm file
@@ -86,7 +96,7 @@ int list_input(int fd, int ch_num){
 	DBG("ioctl: VIDIOC_ENUMINPUT\n");
 	if(ioctl(fd, VIDIOC_ENUMINPUT, &vin) == -1){
 		/// "Нет такого канала"
-		ERR("%s\n", _("No such channel"));
+		WARN(_("No such channel"));
 		return 0;
 	}
 	printf("\tInput       : %d\n", vin.index);
@@ -128,18 +138,18 @@ int grab_set_chan(char *devname, int ch_num){
 	struct stat st;
 	if(-1 == stat(devname, &st)){
 		/// "Не могу идентифицировать"
-		ERR("%s '%s': %d, %s\n", _("Cannot identify"), devname, errno, strerror (errno));
+		WARN("%s '%s'", _("Cannot identify"), devname);
 		return 0;
 	}
 	if(!S_ISCHR(st.st_mode)){
 		/// "не является символьным устройством"
-		ERR("%s \n", devname, _("is not character device file"));
+		WARNX("'%s' %s\n", devname, _("is not character device file"));
 		return 0;
 	}
 	grab_fd = open(devname, O_RDWR | O_NONBLOCK, 0);
 	if(-1 == grab_fd){
 		/// "Не могу открыть"
-		ERR("%s '%s': %d, %s\n", _("Cannot open"), devname, errno, strerror (errno));
+		WARN("%s '%s'", _("Cannot open"), devname);
 		return 0;
 	}
 	if(ioctl(grab_fd, VIDIOC_G_INPUT, &input) == 0){
@@ -150,7 +160,7 @@ int grab_set_chan(char *devname, int ch_num){
 		if(list_input(grab_fd, ch_num)){
 			if(-1 == ioctl (grab_fd, VIDIOC_S_INPUT, &ch_num)){
 				/// "Не могу выбрать требуемый канал"
-				ERR("%s\n", _("Can't set given channel"));
+				WARN(_("Can't set given channel"));
 				return 0;
 			}
 		}else{
@@ -168,18 +178,11 @@ int grab_set_chan(char *devname, int ch_num){
  * @return 0 if failure
  */
 int prepare_videodev(char *videodev, int channel){
-	int             i, videoStream;
-	AVCodecContext  *pCodecCtx = NULL;
-	AVCodec         *pCodec = NULL;
-	AVFrame         *pFrame = NULL;
-	AVFrame         *pFrameRGB = NULL;
-	AVPacket        packet;
-	int             frameFinished;
-	int             numBytes;
-	uint8_t         *buffer = NULL;
+	int i, numBytes, averr;
+	AVCodec *pCodec = NULL;
 	AVInputFormat* ifmt;
-	AVDictionary    *optionsDict = NULL;
-	struct SwsContext      *sws_ctx = NULL;
+	AVDictionary *optionsDict = NULL;
+	char averrbuf[256];
 
 	#ifdef EBUG
 	av_log_set_level(AV_LOG_DEBUG);
@@ -193,144 +196,167 @@ int prepare_videodev(char *videodev, int channel){
 	ifmt = av_find_input_format("video4linux2");
 	if(!ifmt){
 		/// "Не могу найти поддержку v4l2!"
-		ERR("%s\n", _("Can't find v4l2 support!"));
+		WARNX("%s\n", _("Can't find v4l2 support!"));
 		return 0;
 	}
 //  av_dict_set(&optionsDict, "analyzeduration", "0", 0);
 
+	// set channel
 	if(!grab_set_chan(videodev, channel)){
 		return 0;
 	}
-  // Open video file
-  int ii;
-  if((ii = avformat_open_input(&pFormatCtx, videodev, ifmt, &optionsDict))!=0){
-	  char errbuf[256];
-	  av_strerror(ii, errbuf, 255);
-	  printf("Can't open device %s! (%s)\n", videodev, errbuf);
-    return 0; // Couldn't open file
-  }
-  // Retrieve stream information
-  if(avformat_find_stream_info(pFormatCtx, NULL)<0)
-    return 0; // Couldn't find stream information
-  // Dump information about file onto standard error
-  av_dump_format(pFormatCtx, 0, videodev, 0);
-  // Find the first video stream
-  videoStream=-1;
-  int nofstreams = pFormatCtx->nb_streams;
-  for(i=0; i<nofstreams; i++)
-    if(pFormatCtx->streams[i]->codec->codec_type==AVMEDIA_TYPE_VIDEO) {
-      videoStream=i;
-      break;
-    }
-  if(videoStream==-1)
-    return 0; // Didn't find a video stream
 
-  // Get a pointer to the codec context for the video stream
-  pCodecCtx=pFormatCtx->streams[videoStream]->codec;
+	// Open video file
+	if((averr = avformat_open_input(&pFormatCtx, videodev, ifmt, &optionsDict)) < 0){
+		av_strerror(averr, averrbuf, 255);
+		/// "Не могу открыть устройство"
+		WARNX("%s %s! (%s)\n", _("Can't open device"), videodev, averrbuf);
+		return 0; // Couldn't open file
+	}
 
-  // Find the decoder for the video stream
-  pCodec=avcodec_find_decoder(pCodecCtx->codec_id);
-  if(pCodec==NULL) {
-    fprintf(stderr, "Unsupported codec!\n");
-    return 0; // Codec not found
-  }
-  // Open codec
-  if(avcodec_open2(pCodecCtx, pCodec, &optionsDict)<0)
-    return 0; // Could not open codec
+	// Retrieve stream information
+	if((averr = avformat_find_stream_info(pFormatCtx, NULL) < 0)){
+		av_strerror(averr, averrbuf, 255);
+		/// "Не могу обнаружить информацию о потоке"
+		WARNX("%s: %s!", _("Can't find stream information"), averrbuf);
+		return 0; // Couldn't find stream information
+	}
 
-  // Allocate video frame
-  pFrame=av_frame_alloc();
+	// Dump information about file onto standard error
+	av_dump_format(pFormatCtx, 0, videodev, 0);
 
-  // Allocate an AVFrame structure
-  pFrameRGB=av_frame_alloc();
-  if(pFrameRGB==NULL)
-    return 0;
+	// Find the first video stream
+	videoStream = -1;
+	int nofstreams = pFormatCtx->nb_streams;
+	for(i = 0; i < nofstreams; i++)
+		if(pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO){
+			videoStream = i;
+			break;
+		}
+	if(videoStream == -1){
+		/// "Не могу найти видеопоток!"
+		WARNX("Can't find video stream!");
+		return 0; // Didn't find a video stream
+	}
 
-  // Determine required buffer size and allocate buffer
-  numBytes=avpicture_get_size(PIX_FMT_RGB24, pCodecCtx->width,
-			      pCodecCtx->height);
-  buffer=(uint8_t *)av_malloc(numBytes*sizeof(uint8_t));
-printf("Allocated buffer of %d bytes\n", numBytes);
-  sws_ctx =
-    sws_getContext
-    (
-        pCodecCtx->width,
-        pCodecCtx->height,
-        pCodecCtx->pix_fmt,
-        pCodecCtx->width,
-        pCodecCtx->height,
-        PIX_FMT_RGB24,
-        SWS_BILINEAR,
-        NULL,
-        NULL,
-        NULL
-    );
+	// Get a pointer to the codec context for the video stream
+	pCodecCtx=pFormatCtx->streams[videoStream]->codec;
 
-  // Assign appropriate parts of buffer to image planes in pFrameRGB
-  // Note that pFrameRGB is an AVFrame, but AVFrame is a superset
-  // of AVPicture
-  avpicture_fill((AVPicture *)pFrameRGB, buffer, PIX_FMT_RGB24,
+	// Find the decoder for the video stream
+	pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
+	if(pCodec == NULL){
+		/// "Не поддерживаемый кодек!"
+		WARNX("Unsupported codec!");
+		return 0; // Codec not found
+	  }
+	// Open codec
+	if((averr = avcodec_open2(pCodecCtx, pCodec, &optionsDict)) < 0){
+		av_strerror(averr, averrbuf, 255);
+		/// "Не могу открыть кодек!"
+		WARNX("%s: %s!", _("Can't open codec!"), averrbuf);
+		return 0; // Could not open codec
+	}
+
+	// Allocate video frame
+	pFrame = av_frame_alloc();
+	assert(pFrame != NULL);
+
+	// Allocate an AVFrame structure
+	pFrameRGB = av_frame_alloc();
+	assert(pFrameRGB != NULL);
+
+	// Determine required buffer size and allocate buffer
+	numBytes = avpicture_get_size(PIX_FMT_RGB24, pCodecCtx->width,
+			pCodecCtx->height);
+	buffer = (uint8_t *)av_malloc(numBytes*sizeof(uint8_t));
+	assert(buffer != NULL);
+
+	sws_ctx = sws_getContext(
+		pCodecCtx->width,
+		pCodecCtx->height,
+		pCodecCtx->pix_fmt,
+		pCodecCtx->width,
+		pCodecCtx->height,
+		PIX_FMT_RGB24,
+		SWS_BILINEAR,
+		NULL,
+		NULL,
+		NULL
+	);
+	assert(sws_ctx != NULL);
+
+	// Assign appropriate parts of buffer to image planes in pFrameRGB
+	// Note that pFrameRGB is an AVFrame, but AVFrame is a superset
+	// of AVPicture
+	avpicture_fill((AVPicture *)pFrameRGB, buffer, PIX_FMT_RGB24,
 		 pCodecCtx->width, pCodecCtx->height);
-
-  // Read frames and save first five frames to disk
-  i=0;
-/*  src[0] = (uint8_t*)pFrame->data;
-  dst[0] = (uint8_t*)pFrameRGB->data;
-  src_Stride[0] = pFrame->linesize;
-  dst_Stride[0] = pFrameRGB->linesize;*/
-  while(av_read_frame(pFormatCtx, &packet)>=0) {
-    // Is this a packet from the video stream?
-    if(packet.stream_index==videoStream) {
-      // Decode video frame
-      avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished,
-			   &packet);
-
-      // Did we get a video frame?
-      if(frameFinished) {
-	// Convert the image from its native format to RGB
-        sws_scale
-        (
-            sws_ctx,
-            (uint8_t const * const *)pFrame->data,
-            pFrame->linesize,
-            //(const uint8_t *const *) src,
-            //src_Stride,
-            0,
-            pCodecCtx->height,
-            (uint8_t *const *)pFrameRGB->data,
-            pFrameRGB->linesize
-            //(uint8_t *const *) dst,
-            //dst_Stride
-        );
-    // fill frame size fields
-	pFrameRGB->width = pCodecCtx->width;
-	pFrameRGB->height = pCodecCtx->height;
-	// Save the frame to disk
-	if(++i<=5)
-	  SaveFrame(pFrameRGB, i);
-	else break;
-      }
-    }
-
-    // Free the packet that was allocated by av_read_frame
-    av_free_packet(&packet);
-  }
-  // Free the RGB image
-  av_free(buffer);
-  av_free(pFrameRGB);
-
-  // Free the YUV frame
-  av_free(pFrame);
-
-  // Close the codec
-  avcodec_close(pCodecCtx);
-
-  // Close the video file
-  avformat_close_input(&pFormatCtx);
-
-  return 1;
+	videodev_prepared = 1;
+	return 1;
 }
 
-int capture_frame(){
+/**
+ * Capture next frame
+ * @return 0 on error
+ */
+int capture_frame(int istart, int N){
+	if(!videodev_prepared){
+		/// "Видеоустройство не было инициализировано функцией prepare_videodev"
+		WARNX("Video device wasn't prepared with prepare_videodev");
+		return 0;
+	}
+	// Read frames and save first five frames to disk
+	int frameFinished, ilast = istart + N;
+	AVPacket packet;
+
+	while(av_read_frame(pFormatCtx, &packet) >= 0) {
+	// Is this a packet from the video stream?
+		if(packet.stream_index == videoStream){
+			// Decode video frame
+			avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished,
+					&packet);
+			// Did we get a video frame?
+			if(frameFinished){
+				// Convert the image from its native format to RGB
+				sws_scale(
+					sws_ctx,
+					(uint8_t const * const *)pFrame->data,
+					pFrame->linesize,
+					0,
+					pCodecCtx->height,
+					(uint8_t *const *)pFrameRGB->data,
+					pFrameRGB->linesize
+				);
+				// fill frame size fields
+				pFrameRGB->width = pCodecCtx->width;
+				pFrameRGB->height = pCodecCtx->height;
+				// Save the frame to disk
+				if(istart < ilast)
+					SaveFrame(pFrameRGB, istart);
+				if(++istart >= ilast) break;
+			}
+		}
+		// Free the packet that was allocated by av_read_frame
+		av_free_packet(&packet);
+	}
+
 	return 1;
+}
+
+/**
+ * Free unused memory
+ */
+void free_videodev(){
+	if(!videodev_prepared) return; // nothing to do
+	// Free the RGB image
+	if(buffer) av_free(buffer);
+	if(pFrameRGB) av_free(pFrameRGB);
+	// Free the YUV frame
+	if(pFrame) av_free(pFrame);
+	// Close the codec
+	if(pCodecCtx) avcodec_close(pCodecCtx);
+	// free context
+	if(sws_ctx) sws_freeContext(sws_ctx);
+	// Close the video file
+	if(pFormatCtx) avformat_close_input(&pFormatCtx);
+	videodev_prepared = 0;
 }

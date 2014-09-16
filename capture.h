@@ -25,6 +25,7 @@
 
 int prepare_videodev(char *dev, int channel);
 void list_all_inputs(char *dev);
-int capture_frame();
+int capture_frame(int istart, int N);
+void free_videodev();
 
 #endif // __CAPTURE_H__

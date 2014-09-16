@@ -3,3 +3,4 @@
 .hg*
 tmp/*
 tmp
+locale/ru/messages.po

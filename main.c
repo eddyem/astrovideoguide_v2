@@ -36,22 +36,22 @@ int (*green)(const char *fmt, ...);
  * @return number of printed symbols
  */
 int r_pr_(const char *fmt, ...){
-    va_list ar; int i;
-    printf(RED);
-    va_start(ar, fmt);
-    i = vprintf(fmt, ar);
-    va_end(ar);
-    printf(OLDCOLOR);
-    return i;
+	va_list ar; int i;
+	printf(RED);
+	va_start(ar, fmt);
+	i = vprintf(fmt, ar);
+	va_end(ar);
+	printf(OLDCOLOR);
+	return i;
 }
 int g_pr_(const char *fmt, ...){
-    va_list ar; int i;
-    printf(GREEN);
-    va_start(ar, fmt);
-    i = vprintf(fmt, ar);
-    va_end(ar);
-    printf(OLDCOLOR);
-    return i;
+	va_list ar; int i;
+	printf(GREEN);
+	va_start(ar, fmt);
+	i = vprintf(fmt, ar);
+	va_end(ar);
+	printf(OLDCOLOR);
+	return i;
 }
 /*
  * print red error/warning messages (if output is a tty)
@@ -59,20 +59,20 @@ int g_pr_(const char *fmt, ...){
  * @return number of printed symbols
  */
 int r_WARN(const char *fmt, ...){
-    va_list ar; int i = 1;
-    fprintf(stderr, RED);
-    va_start(ar, fmt);
-    if(globErr){
-        errno = globErr;
-        vwarn(fmt, ar);
-        errno = 0;
-        globErr = 0;
-    }else
-        i = vfprintf(stderr, fmt, ar);
-    va_end(ar);
-    i++;
-    fprintf(stderr, OLDCOLOR "\n");
-    return i;
+	va_list ar; int i = 1;
+	fprintf(stderr, RED);
+	va_start(ar, fmt);
+	if(globErr){
+		errno = globErr;
+		vwarn(fmt, ar);
+		errno = 0;
+		globErr = 0;
+	}else
+		i = vfprintf(stderr, fmt, ar);
+	va_end(ar);
+	i++;
+	fprintf(stderr, OLDCOLOR "\n");
+	return i;
 }
 const char stars[] = "****************************************";
 /*
@@ -82,29 +82,29 @@ const char stars[] = "****************************************";
  * @return number of printed symbols
  */
 int s_WARN(const char *fmt, ...){
-    va_list ar; int i;
-    i = fprintf(stderr, "\n%s\n", stars);
-    va_start(ar, fmt);
-    if(globErr){
-        errno = globErr;
-        vwarn(fmt, ar);
-        errno = 0;
-        globErr = 0;
-    }else
-        i = +vfprintf(stderr, fmt, ar);
-    va_end(ar);
-    i += fprintf(stderr, "\n%s\n", stars);
-    i += fprintf(stderr, "\n");
-    return i;
+	va_list ar; int i;
+	i = fprintf(stderr, "\n%s\n", stars);
+	va_start(ar, fmt);
+	if(globErr){
+		errno = globErr;
+		vwarn(fmt, ar);
+		errno = 0;
+		globErr = 0;
+	}else
+	i = +vfprintf(stderr, fmt, ar);
+	va_end(ar);
+	i += fprintf(stderr, "\n%s\n", stars);
+	i += fprintf(stderr, "\n");
+	return i;
 }
 int r_pr_notty(const char *fmt, ...){
-    va_list ar; int i;
-    i = printf("\n%s\n", stars);
-    va_start(ar, fmt);
-    i += vprintf(fmt, ar);
-    va_end(ar);
-    i += printf("\n%s\n", stars);
-    return i;
+	va_list ar; int i;
+	i = printf("\n%s\n", stars);
+	va_start(ar, fmt);
+	i += vprintf(fmt, ar);
+	va_end(ar);
+	i += printf("\n%s\n", stars);
+	return i;
 }
 
 
@@ -129,12 +129,16 @@ int main(int argc, char **argv){
 	assert(Global_parameters != NULL);
 	DBG("videodev: %s, channel: %d\n", Global_parameters->videodev, Global_parameters->videochannel);
 	DBG("list: %d\n", Global_parameters->listchannels);
-	if(Global_parameters->listchannels) list_all_inputs(Global_parameters->videodev);
+	if(Global_parameters->listchannels)
+		list_all_inputs(Global_parameters->videodev);
 	if(!prepare_videodev(Global_parameters->videodev, Global_parameters->videochannel)){
 		/// "Не могу подготовить видеоустройство к работе"
 		ERR(_("Can't prepare video device"));
-		return 1;
 	}
-	capture_frame();
+	capture_frame(1,3);
+	free_videodev();
+	prepare_videodev(Global_parameters->videodev, Global_parameters->videochannel);
+	capture_frame(4,3);
+	free_videodev();
 	return 0;
 }
