@@ -7,7 +7,7 @@
 msgid   ""
 msgstr  "Project-Id-Version: PACKAGE VERSION\n"
         "Report-Msgid-Bugs-To: \n"
-        "POT-Creation-Date: 2014-09-16 17:19+0400\n"
+        "POT-Creation-Date: 2014-09-18 16:26+0400\n"
         "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
         "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
         "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,23 +16,34 @@ msgstr  "Project-Id-Version: PACKAGE VERSION\n"
         "Content-Type: text/plain; charset=koi8-r\n"
         "Content-Transfer-Encoding: 8bit\n"
 
+#. / "Не могу захватить очередной кадр"
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:334
+msgid   "Can't capture next frame"
+msgstr  "Не могу захватить очередной кадр"
+
+#. / "Не могу декодировать видеокадр"
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:361
+#, fuzzy
+msgid   "Can't decode video frame!"
+msgstr  "Не могу подготовить видеоустройство к работе"
+
 #. / "Не могу обнаружить информацию о потоке"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:221
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:235
 msgid   "Can't find stream information"
 msgstr  "Не могу обнаружить информацию о потоке"
 
 #. / "Не могу найти поддержку v4l2!"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:199
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:213
 msgid   "Can't find v4l2 support!"
 msgstr  "Не могу найти поддержку v4l2!"
 
 #. / "Не могу открыть кодек!"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:256
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:270
 msgid   "Can't open codec!"
 msgstr  "Не могу открыть кодек!"
 
 #. / "Не могу открыть устройство"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:213
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:227
 msgid   "Can't open device"
 msgstr  "Не могу открыть устройство"
 
@@ -42,27 +53,27 @@ msgid   "Can't prepare video device"
 msgstr  "Не могу подготовить видеоустройство к работе"
 
 #. / "Не могу выбрать требуемый канал"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:163
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:177
 msgid   "Can't set given channel"
 msgstr  "Не могу выбрать требуемый канал"
 
 #. / "Не могу идентифицировать"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:141
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:155
 msgid   "Cannot identify"
 msgstr  "Не могу идентифицировать"
 
 #. / "Не могу открыть"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:152
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:166
 msgid   "Cannot open"
 msgstr  "Не могу открыть"
 
 #. / "Текущий вход"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:157
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:171
 msgid   "Current input"
 msgstr  "Текущий вход"
 
 #. / "Кадр сохранен"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:68
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:81
 msgid   "Frame saved"
 msgstr  "Кадр сохранен"
 
@@ -72,9 +83,14 @@ msgid   "Ignore argument[s]:"
 msgstr  "Игнорирую аргумент[ы]:"
 
 #. / "Нет такого канала"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:99
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:113
 msgid   "No such channel"
 msgstr  "Нет такого канала"
+
+#. / "Захваченный поток не является видео"
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:365
+msgid   "Packet is not a video stream!"
+msgstr  "Захваченный поток не является видео"
 
 #. ptr = memcpy(&M, &Mdefault, sizeof(M)); assert(ptr);
 #. G.Mirror = &M;
@@ -100,7 +116,7 @@ msgid   "input video device"
 msgstr  "путь к устройству видеозахвата"
 
 #. / "не является символьным устройством"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:146
+#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:160
 msgid   "is not character device file"
 msgstr  "не является символьным устройством"
 

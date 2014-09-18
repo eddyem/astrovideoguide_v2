@@ -23,9 +23,17 @@
 #ifndef __CAPTURE_H__
 #define __CAPTURE_H__
 
+#include <stdint.h> // uint8_t
+
+// max amount of image reading tries
+#ifndef MAX_READING_TRIES
+	#define MAX_READING_TRIES		10
+#endif
+
 int prepare_videodev(char *dev, int channel);
 void list_all_inputs(char *dev);
-int capture_frame(int istart, int N);
+uint8_t *capture_frame();
+int capture_frames(int istart, int N);
 void free_videodev();
 
 #endif // __CAPTURE_H__

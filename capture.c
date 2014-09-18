@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <stdio.h>
 #include <unistd.h>
 
 #include <linux/videodev2.h>
@@ -31,9 +32,8 @@
 #include <libavdevice/avdevice.h>
 #include <libswscale/swscale.h>
 
-#include <stdio.h>
-
 #include "main.h"
+#include "capture.h"
 
 // global variables for capture_frame
 int videoStream;
@@ -52,20 +52,34 @@ int videodev_prepared = 0;
  * Test function to save captured frame to a ppm file
  * @param pFrame - pointer to captured frame
  * @param iFrame - frame number (for filename like frameXXX.png
+ * @return 0 if false
  */
-void SaveFrame(AVFrame *pFrame, int iFrame){
+int SaveFrame(AVFrame *pFrame, int iFrame){
 	FILE *pFile;
 	char szFilename[32];
 	int  y, w = pFrame->width, h = pFrame->height, l = pFrame->linesize[0];
 	sprintf(szFilename, "frame%03d.ppm", iFrame);
-	pFile=fopen(szFilename, "w");
-	if(pFile == NULL) return;
-	fprintf(pFile, "P6\n%d %d\n255\n", w, h);
+	pFile = fopen(szFilename, "w");
+	if(pFile == NULL){
+		WARN("fopen(%s)", szFilename);
+		return 0;
+	}
+	if(fprintf(pFile, "P6\n%d %d\n255\n", w, h) < 0){
+		WARN("printf");
+		return 0;
+	}
 	for(y = 0; y < h; y++)
-		fwrite(pFrame->data[0]+y*l, 1, w*3, pFile);
-	fclose(pFile);
+		if(fwrite(pFrame->data[0]+y*l, 1, w*3, pFile) < 1){
+			WARN("fwrite");
+			return 0;
+		}
+	if(fclose(pFile)){
+		WARN("fclose");
+		return 0;
+	}
 	/// "Кадр сохранен"
 	green("%s\n", _("Frame saved"));
+	return 1;
 }
 
 /**
@@ -240,7 +254,7 @@ int prepare_videodev(char *videodev, int channel){
 	}
 
 	// Get a pointer to the codec context for the video stream
-	pCodecCtx=pFormatCtx->streams[videoStream]->codec;
+	pCodecCtx = pFormatCtx->streams[videoStream]->codec;
 
 	// Find the decoder for the video stream
 	pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
@@ -295,51 +309,79 @@ int prepare_videodev(char *videodev, int channel){
 }
 
 /**
- * Capture next frame
- * @return 0 on error
+ * Capture frame and return pointer to its data
+ * @param w,h - size of captured image (or NULL)
+ * @return pointer to pFrameRGB->data or NULL in case of error
+ * !!! DON'T even try to free returned data !!!
  */
-int capture_frame(int istart, int N){
+uint8_t *capture_frame(int *w, int *h){
+	int i, r, frameFinished;
+	uint8_t *ret = NULL;
 	if(!videodev_prepared){
 		/// "Видеоустройство не было инициализировано функцией prepare_videodev"
 		WARNX("Video device wasn't prepared with prepare_videodev");
-		return 0;
+		return NULL;
 	}
-	// Read frames and save first five frames to disk
-	int frameFinished, ilast = istart + N;
 	AVPacket packet;
-
-	while(av_read_frame(pFormatCtx, &packet) >= 0) {
-	// Is this a packet from the video stream?
-		if(packet.stream_index == videoStream){
-			// Decode video frame
-			avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished,
-					&packet);
-			// Did we get a video frame?
-			if(frameFinished){
-				// Convert the image from its native format to RGB
-				sws_scale(
-					sws_ctx,
-					(uint8_t const * const *)pFrame->data,
-					pFrame->linesize,
-					0,
-					pCodecCtx->height,
-					(uint8_t *const *)pFrameRGB->data,
-					pFrameRGB->linesize
-				);
-				// fill frame size fields
-				pFrameRGB->width = pCodecCtx->width;
-				pFrameRGB->height = pCodecCtx->height;
-				// Save the frame to disk
-				if(istart < ilast)
-					SaveFrame(pFrameRGB, istart);
-				if(++istart >= ilast) break;
-			}
-		}
-		// Free the packet that was allocated by av_read_frame
-		av_free_packet(&packet);
+	// try to read next frame
+	for(i = 0, r = -1; i < MAX_READING_TRIES && r < 0; i++)
+		r = av_read_frame(pFormatCtx, &packet);
+	// check for errors
+	if(r < 0){
+		char errbuff[256];
+		av_strerror(r, errbuff, 255);
+		/// "Не могу захватить очередной кадр"
+		WARNX("%s: %s!", _("Can't capture next frame"), errbuff);
+		return NULL;
 	}
+	// Is this a packet from the video stream?
+	if(packet.stream_index == videoStream){
+		// Decode video frame
+		avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet);
+		// Did we get a video frame?
+		if(frameFinished){
+			// Convert the image from its native format to RGB
+			sws_scale(
+				sws_ctx,
+				(uint8_t const * const *)pFrame->data,
+				pFrame->linesize,
+				0,
+				pCodecCtx->height,
+				(uint8_t *const *)pFrameRGB->data,
+				pFrameRGB->linesize
+			);
+			// fill frame size fields
+			pFrameRGB->width = pCodecCtx->width;
+			pFrameRGB->height = pCodecCtx->height;
+			ret = (uint8_t *)pFrameRGB->data[0];
+			if(w) *w = pCodecCtx->width;
+			if(h) *h = pCodecCtx->height;
+		}else{
+			/// "Не могу декодировать видеокадр"
+			WARNX(_("Can't decode video frame!"));
+		}
+	}else{
+		/// "Захваченный поток не является видео"
+		WARNX(_("Packet is not a video stream!"));
+	}
+	// Free the packet that was allocated by av_read_frame
+	av_free_packet(&packet);
+	return ret;
+}
 
-	return 1;
+/**
+ * Read N frames and save them to disk
+ * @param istart - started image number (for saving)
+ * @param N      - number of frames
+ * @return number of saved frames
+ */
+int capture_frames(int istart, int N){
+	int i, saved = 0;
+	for(i = 0; i < N; i++){
+		if(capture_frame(NULL, NULL))
+			SaveFrame(pFrameRGB, istart + saved++);
+	}
+	return saved;
 }
 
 /**

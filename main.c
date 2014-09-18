@@ -135,12 +135,12 @@ int main(int argc, char **argv){
 		/// "Не могу подготовить видеоустройство к работе"
 		ERR(_("Can't prepare video device"));
 	}
-	capture_frame(1,3);
+	capture_frames(1,3);
 	free_videodev();
 	sleep(2);
 	prepare_videodev(Global_parameters->videodev, Global_parameters->videochannel);
 	sleep(2);
-	capture_frame(4,3);
+	capture_frames(4,3);
 	free_videodev();
 	return 0;
 }
