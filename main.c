@@ -33,8 +33,6 @@
 // daemon.c
 extern void check4running(char **argv, char *pidfilename, void (*iffound)(pid_t pid));
 
-// Port to listen on
-#define PORT    "54321"
 // Max amount of connections
 #define BACKLOG     30
 // PID file
@@ -163,7 +161,7 @@ void *handle_socket(void *asock){
 		// fill incoming buffer
 		readed = read(sock, buff, BUFLEN);
 		if(readed <= 0){ // error or disconnect
-			DBG("Nothing to read from fd %d (ret: %d)", sock, readed);
+			DBG("Nothing to read from fd %d (ret: %zd)", sock, readed);
 			break;
 		}
 		bufptr += readed;
@@ -256,7 +254,7 @@ int main(int argc, char **argv){
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
-	if(getaddrinfo(NULL, PORT, &hints, &res) != 0){
+	if(getaddrinfo(NULL, Global_parameters->port, &hints, &res) != 0){
 		ERR("getaddrinfo");
 	}
 	struct sockaddr_in *ia = (struct sockaddr_in*)res->ai_addr;

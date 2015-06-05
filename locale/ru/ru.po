@@ -7,7 +7,7 @@
 msgid   ""
 msgstr  "Project-Id-Version: PACKAGE VERSION\n"
         "Report-Msgid-Bugs-To: \n"
-        "POT-Creation-Date: 2015-06-05 11:12+0300\n"
+        "POT-Creation-Date: 2015-06-05 11:29+0300\n"
         "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
         "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
         "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,7 +26,7 @@ msgid   "Can't close mmap'ed file"
 msgstr  "Не могу закрыть ммапнутый файл"
 
 #. / "Не могу создать поток для захвата видео"
-#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/main.c:252
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/main.c:250
 #, fuzzy
 msgid   "Can't create readout thread"
 msgstr  "Не могу захватить очередной кадр"
@@ -67,7 +67,7 @@ msgid   "Can't open device"
 msgstr  "Не могу открыть устройство"
 
 #. / "Не могу подготовить видеоустройство к работе"
-#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/main.c:248
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/main.c:246
 msgid   "Can't prepare video device"
 msgstr  "Не могу подготовить видеоустройство к работе"
 
@@ -96,12 +96,12 @@ msgstr  "Не могу открыть"
 msgid   "Current input"
 msgstr  "Текущий вход"
 
-#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/main.c:76
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/main.c:74
 msgid   "Error capturing!"
 msgstr  "Ошибка захвата"
 
 #. / "Игнорирую аргумент[ы]:"
-#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/cmdlnopts.c:78
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/cmdlnopts.c:81
 msgid   "Ignore argument[s]:"
 msgstr  "Игнорирую аргумент[ы]:"
 
@@ -127,7 +127,7 @@ msgstr  "Захваченный поток не является видео"
 #. G.Mirror = &M;
 #. format of help: "Usage: progname [args]\n"
 #. / "Использование: %s [аргументы]\n\n\tГде аргументы:\n"
-#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/cmdlnopts.c:72
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/cmdlnopts.c:75
 #, c-format
 msgid   "Usage: %s [args]\n"
         "\n"
@@ -137,12 +137,12 @@ msgstr  "Использование: %s [аргументы]\n"
         "\tГде аргументы:\n"
 
 #. / "номер канала захвата"
-#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/cmdlnopts.c:47
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/cmdlnopts.c:48
 msgid   "capture channel number"
 msgstr  "номер канала захвата"
 
 #. / "путь к устройству видеозахвата"
-#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/cmdlnopts.c:45
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/cmdlnopts.c:46
 msgid   "input video device"
 msgstr  "путь к устройству видеозахвата"
 
@@ -152,16 +152,21 @@ msgid   "is not character device file"
 msgstr  "не является символьным устройством"
 
 #. / "отобразить доступный список каналов"
-#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/cmdlnopts.c:49
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/cmdlnopts.c:50
 msgid   "list avaiable channels"
 msgstr  "отобразить доступный список каналов"
 
+#. / "номер порта"
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/cmdlnopts.c:54
+msgid   "port number"
+msgstr  "номер порта"
+
 #. / "отобразить это сообщение"
-#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/cmdlnopts.c:43
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/cmdlnopts.c:44
 msgid   "show this help"
 msgstr  "отобразить это сообщение"
 
-#. / не переходить в фоновый режим
-#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/cmdlnopts.c:51
+#. / "не переходить в фоновый режим"
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/cmdlnopts.c:52
 msgid   "work in foreground"
 msgstr  "не переходить в фоновый режим"

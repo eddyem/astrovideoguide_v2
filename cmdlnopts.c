@@ -32,6 +32,7 @@ glob_pars Gdefault = {
 	.videochannel    = 0,
 	.listchannels    = FALSE,
 	.nodaemon        = FALSE,
+	.port            = "54321",
 };
 
 /*
@@ -47,8 +48,10 @@ myoption cmdlnopts[] = {
 	{"channel", 1,	NULL,	'n',	arg_int,	APTR(&G.videochannel),N_("capture channel number")},
 	/// "отобразить доступный список каналов"
 	{"list-channels",0,NULL,'l',	arg_none,	APTR(&G.listchannels),N_("list avaiable channels")},
-	/// не переходить в фоновый режим
+	/// "не переходить в фоновый режим"
 	{"foreground",0,NULL, 'f',		arg_none,	APTR(&G.nodaemon),	N_("work in foreground")},
+	/// "номер порта"
+	{"port",	1,	NULL,	'p',	arg_string,	APTR(&G.port),		N_("port number")},
 	// ...
 	end_option
 };

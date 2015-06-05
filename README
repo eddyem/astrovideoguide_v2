@@ -1,0 +1,4 @@
+This is a simple client-server application that allows you to get images
+from remote videocamera over HTTP or regular socket.
+
+Supporting formats (all RGB, 8bit): raw, jpg, png
