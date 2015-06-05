@@ -31,6 +31,7 @@ glob_pars Gdefault = {
 	.videodev        = "/dev/video0",
 	.videochannel    = 0,
 	.listchannels    = FALSE,
+	.nodaemon        = FALSE,
 };
 
 /*
@@ -46,72 +47,12 @@ myoption cmdlnopts[] = {
 	{"channel", 1,	NULL,	'n',	arg_int,	APTR(&G.videochannel),N_("capture channel number")},
 	/// "отобразить доступный список каналов"
 	{"list-channels",0,NULL,'l',	arg_none,	APTR(&G.listchannels),N_("list avaiable channels")},
+	/// не переходить в фоновый режим
+	{"foreground",0,NULL, 'f',		arg_none,	APTR(&G.nodaemon),	N_("work in foreground")},
 	// ...
 	end_option
 };
 
-
-/**
- * Parse string of suboptions (--option=name1=var1:name2=var2... or -O name1=var1,name2=var2...)
- * Suboptions could be divided by colon or comma
- *
- * !!NAMES OF SUBOPTIONS ARE CASE-UNSENSITIVE!!!
- *
- * @param arg (i)    - string with description
- * @param V (io) - pointer to suboptions array (result will be stored in sopts->val)
- * @return TRUE if success
- *
-bool get_suboptions(void *arg, suboptions *V){
-	char *tok, *val, *par;
-	int i;
-	tok = strtok(arg, ":,");
-	do{
-		if((val = strchr(tok, '=')) == NULL){ // wrong format
-			WARNX(_("Wrong format: no value for keyword"));
-			return FALSE;
-		}
-		*val++ = '\0';
-		par = tok;
-		for(i = 0; V[i].val; i++){
-			if(strcasecmp(par, V[i].par) == 0){ // found parameter
-				if(V[i].isdegr){ // DMS
-					if(!get_radians(V[i].val, val)) // wrong angle
-						return FALSE;
-					DBG("Angle: %g rad\n", *(V[i].val));
-				}else{ // simple float
-					if(!myatof(V[i].val, val)) // wrong number
-						return FALSE;
-					DBG("Float val: %g\n", *(V[i].val));
-				}
-				break;
-			}
-		}
-		if(!V[i].val){ // nothing found - wrong format
-			WARNX(_("Bad keyword!"));
-			return FALSE;
-		}
-	}while((tok = strtok(NULL, ":,")));
-	return TRUE;
-}
-*/
-
-/**
- * functions of subargs parcing can looks as this
- *
-bool get_mir_par(void *arg, int N _U_){
-	suboptions V[] = { // array of mirror parameters and string keys for cmdln pars
-		{&M.D,		"diam",		FALSE},
-		{&M.F,		"foc",		FALSE},
-		{&M.Zincl,	"zincl",	TRUE},
-		{&M.Aincl,	"aincl",	TRUE},
-		{&M.objA,	"aobj",		TRUE},
-		{&M.objZ,	"zobj",		TRUE},
-		{&M.foc,	"ccd",		FALSE},
-		{0,0,0}
-	};
-	return get_suboptions(arg, V);
-}
-*/
 
 /**
  * Parce command line options and return dynamically allocated structure

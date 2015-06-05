@@ -29,12 +29,6 @@
 #include <ctype.h>	// isalpha
 #include "parceargs.h"
 
-#ifdef EBUG
-	#define DBG(...) printf(__VA_ARGS__)
-#else
-	#define DBG(...)
-#endif
-
 // macro to print help messages
 #ifndef PRNT
 	#define PRNT(x) gettext(x)
@@ -60,13 +54,11 @@ void change_helpstring(char *s){
 		}
 		if(str[1] == 's') scount++; // increment "%s" counter
 	};
-	DBG("pc: %d, sc: %d\n", pcount, scount);
 	if(pcount > 1 || pcount != scount){ // amount of pcount and/or scount wrong
 		fprintf(stderr, "Wrong helpstring!\n");
 		exit(-1);
 	}
 	helpstring = s;
-	DBG("hs: %s\n", helpstring);
 }
 
 /**
@@ -208,11 +200,7 @@ void parceargs(int *argc, char ***argv, myoption *options){
 			else optind = get_optind(opt, options);
 		}
 		opts = &options[optind];
-DBG ("\n*******\noption %s (oindex = %d / optind = %d)", options[optind].name, oindex, optind);
-if(optarg) DBG (" with arg %s", optarg);
-DBG ("\n");
 		if(opt == 0 && opts->has_arg == 0) continue; // only long option changing integer flag
-DBG("opt = %c, arg type: ", opt);
 		// now check option
 		if(opts->has_arg == 1) assert(optarg);
 		bool result = TRUE;
@@ -221,36 +209,28 @@ DBG("opt = %c, arg type: ", opt);
 		switch(opts->type){
 			default:
 			case arg_none:
-DBG("none\n");
 				if(opts->argptr) *((int*)opts->argptr) = 1; // set argptr to 1
 			break;
 			case arg_int:
-DBG("integer\n");
 				result = myatoll(opts->argptr, optarg, arg_int);
 			break;
 			case arg_longlong:
-DBG("long long\n");
 				result = myatoll(opts->argptr, optarg, arg_longlong);
 			break;
 			case arg_double:
-DBG("double\n");
 				result = myatod(opts->argptr, optarg, arg_double);
 			break;
 			case arg_float:
-DBG("double\n");
 				result = myatod(opts->argptr, optarg, arg_float);
 			break;
 			case arg_string:
-DBG("string\n");
 				result = (*((char **)opts->argptr) = strdup(optarg));
 			break;
 			case arg_function:
-DBG("function\n");
 				result = ((argfn)opts->argptr)(optarg, optind);
 			break;
 		}
 		if(!result){
-DBG("OOOPS! Error in result\n");
 			showhelp(optind, options);
 		}
 	}
@@ -266,7 +246,7 @@ DBG("OOOPS! Error in result\n");
  * @exit:  run `exit(-1)` !!!
  */
 void showhelp(int oindex, myoption *options){
-	// ATTENTION: string `help` prints through macro PRNT(), bu default it is gettext,
+	// ATTENTION: string `help` prints through macro PRNT(), by default it is gettext,
 	// but you can redefine it before `#include "parceargs.h"`
 	int max_opt_len = 0; // max len of options substring - for right indentation
 	const int bufsz = 255;

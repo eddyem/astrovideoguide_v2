@@ -14,6 +14,7 @@ set(CMAKE_COLOR_MAKEFILE ON)
 
 # here is one of two variants: all .c in directory or .c files in list
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR} SOURCES)
+list(REMOVE_ITEM SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/client.c)
 #set(SOURCES list_of_c_files)
 
 # we can change file list
@@ -61,10 +62,16 @@ set(RU_FILE ${LCPATH}/ru.po)
 
 # pkgconfig
 find_package(PkgConfig REQUIRED)
+find_package(JPEG REQUIRED)
+find_package(PNG REQUIRED)
 pkg_check_modules(${PROJ} REQUIRED ${MODULES})
+
+list(APPEND ${PROJ}_INCLUDE_DIRS ${JPEG_INCLUDE_DIR} ${PNG_INCLUDE_DIR})
+list(APPEND ${PROJ}_LIBRARIES ${JPEG_LIBRARY} ${PNG_LIBRARY})
 
 # exe file
 add_executable(${PROJ} ${SOURCES} ${PO_FILE} ${MO_FILE})
+add_executable(test_client client.c usefull_macros.c parceargs.c)
 target_link_libraries(${PROJ} ${${PROJ}_LIBRARIES})
 include_directories(${${PROJ}_INCLUDE_DIRS})
 link_directories(${${PROJ}_LIBRARY_DIRS})
@@ -72,6 +79,16 @@ add_definitions(${CFLAGS} -DLOCALEDIR=\"${LOCALEDIR}\"
 		-DPACKAGE_VERSION=\"${VERSION}\" -DGETTEXT_PACKAGE=\"${PROJ}\"
 		-DMINOR_VERSION=\"${MINOR_VERSION}\" -DMID_VERSION=\"${MID_VERSION}\"
 		-DMAJOR_VERSION=\"${MAJOR_VESION}\")
+
+#pthreads
+find_package(Threads REQUIRED)
+if(THREADS_HAVE_PTHREAD_ARG)
+  set_property(TARGET ${PROJ} PROPERTY COMPILE_OPTIONS "-pthread")
+  set_property(TARGET ${PROJ} PROPERTY INTERFACE_COMPILE_OPTIONS "-pthread")
+endif()
+if(CMAKE_THREAD_LIBS_INIT)
+  target_link_libraries(${PROJ} "${CMAKE_THREAD_LIBS_INIT}")
+endif()
 
 # Installation of the program
 INSTALL(FILES ${MO_FILE} DESTINATION "share/locale/ru/LC_MESSAGES")

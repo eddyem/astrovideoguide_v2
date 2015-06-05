@@ -36,4 +36,7 @@ uint8_t *capture_frame();
 int capture_frames(int istart, int N);
 void free_videodev();
 
+uint8_t *getpng(size_t *size, int w, int h, uint8_t *data);
+uint8_t *getjpg(size_t *size, int w, int h, uint8_t *data);
+
 #endif // __CAPTURE_H__

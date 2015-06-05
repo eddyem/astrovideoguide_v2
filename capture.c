@@ -32,6 +32,10 @@
 #include <libavdevice/avdevice.h>
 #include <libswscale/swscale.h>
 
+#include <png.h>
+#include <jpeglib.h>
+#include <tiffio.h>
+
 #include "main.h"
 #include "capture.h"
 
@@ -48,39 +52,7 @@ int videodev_prepared = 0;
 
 
 
-/**
- * Test function to save captured frame to a ppm file
- * @param pFrame - pointer to captured frame
- * @param iFrame - frame number (for filename like frameXXX.png
- * @return 0 if false
- */
-int SaveFrame(AVFrame *pFrame, int iFrame){
-	FILE *pFile;
-	char szFilename[32];
-	int  y, w = pFrame->width, h = pFrame->height, l = pFrame->linesize[0];
-	sprintf(szFilename, "frame%03d.ppm", iFrame);
-	pFile = fopen(szFilename, "w");
-	if(pFile == NULL){
-		WARN("fopen(%s)", szFilename);
-		return 0;
-	}
-	if(fprintf(pFile, "P6\n%d %d\n255\n", w, h) < 0){
-		WARN("printf");
-		return 0;
-	}
-	for(y = 0; y < h; y++)
-		if(fwrite(pFrame->data[0]+y*l, 1, w*3, pFile) < 1){
-			WARN("fwrite");
-			return 0;
-		}
-	if(fclose(pFile)){
-		WARN("fclose");
-		return 0;
-	}
-	/// "Кадр сохранен"
-	green("%s\n", _("Frame saved"));
-	return 1;
-}
+
 
 /**
  * Check whether input with number ch_num is available
@@ -316,6 +288,7 @@ int prepare_videodev(char *videodev, int channel){
  */
 uint8_t *capture_frame(int *w, int *h){
 	int i, r, frameFinished;
+//	size_t S;
 	uint8_t *ret = NULL;
 	if(!videodev_prepared){
 		/// "Видеоустройство не было инициализировано функцией prepare_videodev"
@@ -353,7 +326,10 @@ uint8_t *capture_frame(int *w, int *h){
 			// fill frame size fields
 			pFrameRGB->width = pCodecCtx->width;
 			pFrameRGB->height = pCodecCtx->height;
-			ret = (uint8_t *)pFrameRGB->data[0];
+//			S = w*h;
+//			ret = MALLOC(uint8_t, S);
+//			memcpy(ret, pFrameRGB->data[0], S);
+			ret = (uint8_t*) pFrameRGB->data[0];
 			if(w) *w = pCodecCtx->width;
 			if(h) *h = pCodecCtx->height;
 		}else{
@@ -367,21 +343,6 @@ uint8_t *capture_frame(int *w, int *h){
 	// Free the packet that was allocated by av_read_frame
 	av_free_packet(&packet);
 	return ret;
-}
-
-/**
- * Read N frames and save them to disk
- * @param istart - started image number (for saving)
- * @param N      - number of frames
- * @return number of saved frames
- */
-int capture_frames(int istart, int N){
-	int i, saved = 0;
-	for(i = 0; i < N; i++){
-		if(capture_frame(NULL, NULL))
-			SaveFrame(pFrameRGB, istart + saved++);
-	}
-	return saved;
 }
 
 /**
@@ -402,3 +363,91 @@ void free_videodev(){
 	if(pFormatCtx) avformat_close_input(&pFormatCtx);
 	videodev_prepared = 0;
 }
+
+
+/* structure to store PNG image bytes */
+struct mem_encode{
+	char *buffer;
+	size_t size;
+};
+
+void my_png_write_data(png_structp png_ptr, png_bytep data, png_size_t length){
+	FNAME();
+	struct mem_encode* p=(struct mem_encode*)png_get_io_ptr(png_ptr); /* was png_ptr->io_ptr */
+	size_t nsize = p->size + length;
+	p->buffer = realloc(p->buffer, nsize);
+	if(!p->buffer)
+	png_error(png_ptr, "Write Error");
+	memcpy(p->buffer + p->size, data, length);
+	p->size += length;
+}
+
+uint8_t *getpng(size_t *size, int w, int h, uint8_t *data){
+	FNAME();
+	struct mem_encode state;
+	uint8_t *outbuf = NULL;
+	state.buffer = NULL;
+	state.size = 0;
+	*size = 0;
+	png_structp pngptr = NULL;
+	png_infop infoptr = NULL;
+	uint8_t *row;
+	if((pngptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,
+							NULL, NULL, NULL)) == NULL){
+		goto done;
+	}
+	png_set_write_fn(pngptr, &state, my_png_write_data, NULL);
+	if((infoptr = png_create_info_struct(pngptr)) == NULL){
+		goto done;
+	}
+	png_set_compression_level(pngptr, 1);
+
+	png_set_IHDR(pngptr, infoptr, w, h, 8, PNG_COLOR_TYPE_RGB,
+				PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
+				PNG_FILTER_TYPE_DEFAULT);
+	png_write_info(pngptr, infoptr);
+	png_set_swap(pngptr);
+	w *= 3;
+	for(row = data; h > 0; row += w, h--)
+		png_write_row(pngptr, row);
+	png_write_end(pngptr, infoptr);
+	outbuf = malloc(state.size);
+	*size = state.size;
+	if(outbuf) memcpy(outbuf, state.buffer, state.size);
+	done:
+	if(pngptr) png_destroy_write_struct(&pngptr, &infoptr);
+	free(state.buffer);
+	return outbuf;
+}
+
+uint8_t *getjpg(size_t *size, int w, int h, uint8_t *data){
+	uint8_t *outbuf = NULL;
+	size_t outlen;
+	uint8_t *row;
+	*size = 0;
+	struct jpeg_compress_struct cinfo;
+	struct jpeg_error_mgr jerr;
+	cinfo.err = jpeg_std_error(&jerr);
+	jpeg_create_compress(&cinfo);
+	jpeg_mem_dest(&cinfo, &outbuf, &outlen);
+	cinfo.image_width      = w;
+	cinfo.image_height     = h;
+	cinfo.input_components = 3;
+	cinfo.in_color_space   = JCS_RGB;
+	jpeg_set_defaults(&cinfo);
+	jpeg_set_quality (&cinfo, 60, 1);
+	jpeg_start_compress(&cinfo, 1);
+	JSAMPROW row_pointer;
+	w *= 3;
+	int H;
+	//for(row = &data[w*(h-1)]; h > 0; row -= w, h--){
+	for(row = data, H=0; H < h; row += w, H++){
+		row_pointer = (JSAMPROW)row;
+		jpeg_write_scanlines(&cinfo, &row_pointer, 1);
+	}
+	jpeg_finish_compress(&cinfo);
+	*size = outlen;
+	return outbuf;
+}
+
+

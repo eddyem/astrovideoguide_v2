@@ -7,7 +7,7 @@
 msgid   ""
 msgstr  "Project-Id-Version: PACKAGE VERSION\n"
         "Report-Msgid-Bugs-To: \n"
-        "POT-Creation-Date: 2014-09-18 16:26+0400\n"
+        "POT-Creation-Date: 2015-06-05 11:12+0300\n"
         "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
         "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
         "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,78 +17,109 @@ msgstr  "Project-Id-Version: PACKAGE VERSION\n"
         "Content-Transfer-Encoding: 8bit\n"
 
 #. / "Не могу захватить очередной кадр"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:334
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/capture.c:307
 msgid   "Can't capture next frame"
 msgstr  "Не могу захватить очередной кадр"
 
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/usefull_macros.c:186
+msgid   "Can't close mmap'ed file"
+msgstr  "Не могу закрыть ммапнутый файл"
+
+#. / "Не могу создать поток для захвата видео"
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/main.c:252
+#, fuzzy
+msgid   "Can't create readout thread"
+msgstr  "Не могу захватить очередной кадр"
+
 #. / "Не могу декодировать видеокадр"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:361
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/capture.c:337
 #, fuzzy
 msgid   "Can't decode video frame!"
 msgstr  "Не могу подготовить видеоустройство к работе"
 
 #. / "Не могу обнаружить информацию о потоке"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:235
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/capture.c:207
 msgid   "Can't find stream information"
 msgstr  "Не могу обнаружить информацию о потоке"
 
 #. / "Не могу найти поддержку v4l2!"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:213
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/capture.c:185
 msgid   "Can't find v4l2 support!"
 msgstr  "Не могу найти поддержку v4l2!"
 
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/usefull_macros.c:195
+msgid   "Can't munmap"
+msgstr  "Не могу размапить"
+
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/usefull_macros.c:180
+#, fuzzy, c-format
+msgid   "Can't open %s for reading"
+msgstr  "Не могу открыть кодек!"
+
 #. / "Не могу открыть кодек!"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:270
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/capture.c:242
 msgid   "Can't open codec!"
 msgstr  "Не могу открыть кодек!"
 
 #. / "Не могу открыть устройство"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:227
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/capture.c:199
 msgid   "Can't open device"
 msgstr  "Не могу открыть устройство"
 
 #. / "Не могу подготовить видеоустройство к работе"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/main.c:136
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/main.c:248
 msgid   "Can't prepare video device"
 msgstr  "Не могу подготовить видеоустройство к работе"
 
 #. / "Не могу выбрать требуемый канал"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:177
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/capture.c:149
 msgid   "Can't set given channel"
 msgstr  "Не могу выбрать требуемый канал"
 
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/usefull_macros.c:182
+#, c-format
+msgid   "Can't stat %s"
+msgstr  "Ошибка stat(%s)"
+
 #. / "Не могу идентифицировать"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:155
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/capture.c:127
 msgid   "Cannot identify"
 msgstr  "Не могу идентифицировать"
 
 #. / "Не могу открыть"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:166
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/capture.c:138
 msgid   "Cannot open"
 msgstr  "Не могу открыть"
 
 #. / "Текущий вход"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:171
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/capture.c:143
 msgid   "Current input"
 msgstr  "Текущий вход"
 
-#. / "Кадр сохранен"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:81
-msgid   "Frame saved"
-msgstr  "Кадр сохранен"
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/main.c:76
+msgid   "Error capturing!"
+msgstr  "Ошибка захвата"
 
 #. / "Игнорирую аргумент[ы]:"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/cmdlnopts.c:137
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/cmdlnopts.c:78
 msgid   "Ignore argument[s]:"
 msgstr  "Игнорирую аргумент[ы]:"
 
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/usefull_macros.c:185
+msgid   "Mmap error for input"
+msgstr  "Ошибка mmap"
+
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/usefull_macros.c:178
+msgid   "No filename given!"
+msgstr  "Не задано имя файла"
+
 #. / "Нет такого канала"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:113
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/capture.c:85
 msgid   "No such channel"
 msgstr  "Нет такого канала"
 
 #. / "Захваченный поток не является видео"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:365
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/capture.c:341
 msgid   "Packet is not a video stream!"
 msgstr  "Захваченный поток не является видео"
 
@@ -96,7 +127,7 @@ msgstr  "Захваченный поток не является видео"
 #. G.Mirror = &M;
 #. format of help: "Usage: progname [args]\n"
 #. / "Использование: %s [аргументы]\n\n\tГде аргументы:\n"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/cmdlnopts.c:131
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/cmdlnopts.c:72
 #, c-format
 msgid   "Usage: %s [args]\n"
         "\n"
@@ -106,26 +137,31 @@ msgstr  "Использование: %s [аргументы]\n"
         "\tГде аргументы:\n"
 
 #. / "номер канала захвата"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/cmdlnopts.c:46
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/cmdlnopts.c:47
 msgid   "capture channel number"
 msgstr  "номер канала захвата"
 
 #. / "путь к устройству видеозахвата"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/cmdlnopts.c:44
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/cmdlnopts.c:45
 msgid   "input video device"
 msgstr  "путь к устройству видеозахвата"
 
 #. / "не является символьным устройством"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/capture.c:160
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/capture.c:132
 msgid   "is not character device file"
 msgstr  "не является символьным устройством"
 
 #. / "отобразить доступный список каналов"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/cmdlnopts.c:48
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/cmdlnopts.c:49
 msgid   "list avaiable channels"
 msgstr  "отобразить доступный список каналов"
 
 #. / "отобразить это сообщение"
-#: /home/eddy/Docs/SAO/Image_processing/FFMPEG/capture_daemon/cmdlnopts.c:42
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/cmdlnopts.c:43
 msgid   "show this help"
 msgstr  "отобразить это сообщение"
+
+#. / не переходить в фоновый режим
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/cmdlnopts.c:51
+msgid   "work in foreground"
+msgstr  "не переходить в фоновый режим"

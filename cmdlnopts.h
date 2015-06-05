@@ -33,7 +33,7 @@ typedef struct{
 	char *videodev;         // input video device
 	int videochannel;       // input channel number
 	int listchannels;       // show avaiable channels on given device
-
+	int nodaemon;           // not daemonize
 }glob_pars;
 
 glob_pars *parce_args(int argc, char **argv);
