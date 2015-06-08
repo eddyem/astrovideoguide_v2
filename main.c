@@ -176,7 +176,7 @@ void *handle_socket(void *asock){
 			// web query have format GET /anyname.suffix, where suffix defines file type
 			if(*got != '/')
 				break;
-			if(!(found = strchr(got, '.')) || !(found[1]))
+			if(!(found = strrchr(got, '.')) || !(found[1]))
 				break;
 			found++;
 		}else{ // regular query

@@ -1,0 +1,20 @@
+<html>
+<head><title>Simple streaming test</title>
+<script>
+	var img = new Image();
+	img.onload = function(){
+		document.getElementById("animage").src = img.src;
+		stream_next();
+		console.log("Next");
+	}
+	function stream_next(){
+		img.src = "http://localhost:54321/" + Math.random() + ".jpg";
+	}
+</script>
+</head>
+<body onload="stream_next();">
+<img id="animage">
+</body>
+</html>
+
+
