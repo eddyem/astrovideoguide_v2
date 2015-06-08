@@ -2,13 +2,15 @@
 <head><title>Simple streaming test</title>
 <script>
 	var img = new Image();
+	var iterator = 1;
+	var tmout;
 	img.onload = function(){
 		document.getElementById("animage").src = img.src;
-		stream_next();
-		console.log("Next");
+		clearTimeout(tmout);
+		tmout = setTimeout(stream_next, 50);
 	}
 	function stream_next(){
-		img.src = "http://localhost:54321/" + Math.random() + ".jpg";
+		img.src = "http://localhost:54321/" + (iterator++) + ".jpg";
 	}
 </script>
 </head>

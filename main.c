@@ -149,6 +149,7 @@ void send_image(int strip, imagetype imtype, int sockfd){
 }
 
 void *handle_socket(void *asock){
+	FNAME();
 	if(global_quit) return NULL;
 	int sock = *((int*)asock);
 	int webquery = 0; // whether query is web or regular
@@ -201,6 +202,7 @@ void *handle_socket(void *asock){
 	}
 	close(sock);
 	DBG("closed");
+	pthread_exit(NULL);
 	return NULL;
 }
 
@@ -311,8 +313,10 @@ int main(int argc, char **argv){
 			continue;
 		}
 		pthread_t handler_thread;
-		if(pthread_create(&handler_thread, NULL, handle_socket, (void*) &newsock) < 0)
+		if(pthread_create(&handler_thread, NULL, handle_socket, (void*) &newsock))
 			WARN("pthread_create()");
+		else
+			pthread_detach(handler_thread);
 		if(pthread_kill(readout_thread, 0) == ESRCH) // the readout thread is dead
 			break;
 	}
