@@ -70,8 +70,8 @@ static volatile uint64_t imctr = 0; // frame counter (we need it to know that th
 void *read_buf(_U_ void *buf){
 	while(!global_quit){
 		pthread_mutex_lock(&readout_mutex);
-		if(!(frame = capture_frame(&w, &h)))
-			ERR(_("Error capturing!"));
+		while(!(frame = capture_frame(&w, &h)));
+		//	ERR(_("Error capturing!"));
 		imctr++;
 		pthread_mutex_unlock(&readout_mutex);
 		usleep(1000);

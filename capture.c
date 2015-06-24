@@ -296,9 +296,15 @@ uint8_t *capture_frame(int *w, int *h){
 		return NULL;
 	}
 	AVPacket packet;
+
 	// try to read next frame
-	for(i = 0, r = -1; i < MAX_READING_TRIES && r < 0; i++)
+	for(i = 0, r = -1; i < MAX_READING_TRIES && r < 0; i++){
 		r = av_read_frame(pFormatCtx, &packet);
+		if(r < 0){
+		//	avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet);
+			usleep(50000);
+		}
+	}
 	// check for errors
 	if(r < 0){
 		char errbuff[256];
@@ -310,7 +316,12 @@ uint8_t *capture_frame(int *w, int *h){
 	// Is this a packet from the video stream?
 	if(packet.stream_index == videoStream){
 		// Decode video frame
-		avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet);
+		if(avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet) < 0){
+			/// "Ошибка декодирования кадра"
+			WARNX(_("Error decoding frame"));
+			av_free_packet(&packet);
+			return NULL;
+		}
 		// Did we get a video frame?
 		if(frameFinished){
 			// Convert the image from its native format to RGB
