@@ -26,6 +26,8 @@
 #include <signal.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/prctl.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
@@ -35,8 +37,6 @@ extern void check4running(char **argv, char *pidfilename, void (*iffound)(pid_t 
 
 // Max amount of connections
 #define BACKLOG     30
-// PID file
-#define PIDFILE "/tmp/avguide.pid"
 
 #define BUFLEN (1024)
 
@@ -59,11 +59,13 @@ static const char *mimetypes[] = { "jpeg", "raw", "jpeg", "png"};
 static const imagetype suffixtypes[] = { IMTYPE_JPG, IMTYPE_RAW, IMTYPE_JPG, IMTYPE_PNG };
 
 
-static int global_quit = 0;
+static volatile int global_quit = 0;
 // quit by signal
 static void signals(_U_ int sig){
 	DBG("Get signal %d, quit.\n", sig);
 	global_quit = 1;
+	sleep(1);
+	exit(sig);
 }
 
 static volatile uint64_t imctr = 0; // frame counter (we need it to know that there's some new frames)
@@ -143,13 +145,13 @@ void send_image(int strip, imagetype imtype, int sockfd){
 	FREE(imagedata);
 	buflen += L;
 	sent = write(sockfd, buff, buflen);
-	DBG("send %ld bytes\n", sent);
+	//DBG("send %ld bytes\n", sent);
 	if((size_t)sent != buflen) WARN("write()");
 	FREE(buff);
 }
 
 void *handle_socket(void *asock){
-	FNAME();
+	//FNAME();
 	if(global_quit) return NULL;
 	int sock = *((int*)asock);
 	int webquery = 0; // whether query is web or regular
@@ -168,12 +170,12 @@ void *handle_socket(void *asock){
 		bufptr += readed;
 		// add trailing zero to be on the safe side
 		*bufptr = 0;
-		DBG("get %zd bytes: %s", readed, buff);
+	//	DBG("get %zd bytes: %s", readed, buff);
 		// now we should check what do user want
 		char *got, *found = NULL;
 		if((got = stringscan(buff, "GET"))){ // web query
 			webquery = 1;
-			DBG("Web query:\n%s\n", got);
+	//		DBG("Web query:\n%s\n", got);
 			// web query have format GET /anyname.suffix, where suffix defines file type
 			if(*got != '/')
 				break;
@@ -183,7 +185,7 @@ void *handle_socket(void *asock){
 		}else{ // regular query
 			found = buff;
 		}
-		DBG("message: %s", found);
+	//	DBG("message: %s", found);
 		int i = 0;
 		do{
 			if(strcasecmp(found, imsuffixes[i]) == 0){
@@ -201,48 +203,16 @@ void *handle_socket(void *asock){
 		if(webquery) break; // close connection if this is a web query
 	}
 	close(sock);
-	DBG("closed");
+	//DBG("closed");
 	pthread_exit(NULL);
 	return NULL;
 }
 
-
-int main(int argc, char **argv){
+static inline void main_proc(){
 	pthread_t readout_thread;
 	int sock;
 	struct addrinfo hints, *res, *p;
 	int reuseaddr = 1;
-	// setup coloured output
-	initial_setup();
-	check4running(argv, PIDFILE, NULL);
-	/*
-	 * To run in GUI bullshit (like qt or gtk) you must do:
-	 * bind_textdomain_codeset(PACKAGE, "UTF8");
-	 */
-	Global_parameters = parce_args(argc, argv);
-	assert(Global_parameters != NULL);
-	DBG("videodev: %s, channel: %d\n", Global_parameters->videodev, Global_parameters->videochannel);
-	DBG("list: %d\n", Global_parameters->listchannels);
-	if(Global_parameters->listchannels){
-		list_all_inputs(Global_parameters->videodev);
-		return 0;
-	}
-
-	signal(SIGTERM, signals); // kill (-15) - quit
-	signal(SIGHUP, signals);  // hup - quit
-	signal(SIGINT, signals);  // ctrl+C - quit
-	signal(SIGQUIT, signals); // ctrl+\ - quit
-	signal(SIGTSTP, SIG_IGN); // ignore ctrl+Z
-
-#ifndef EBUG // daemonize only in release mode
-	if(!Global_parameters->nodaemon){
-		if(daemon(1, 0)){
-			perror("daemon()");
-			exit(1);
-		}
-	}
-#endif // EBUG
-
 	if(!prepare_videodev(Global_parameters->videodev, Global_parameters->videochannel)){
 		/// "Не могу подготовить видеоустройство к работе"
 		ERR(_("Can't prepare video device"));
@@ -306,7 +276,7 @@ int main(int argc, char **argv){
 			continue;
 		}
 		if(!(FD_ISSET(sock, &readfds))) continue;
-		DBG("accept");
+	//	DBG("accept");
 		newsock = accept(sock, (struct sockaddr*)&their_addr, &size);
 		if(newsock <= 0){
 			WARN("accept()");
@@ -332,6 +302,50 @@ int main(int argc, char **argv){
 	pthread_mutex_unlock(&readout_mutex);
 	close(sock);
 	free_videodev();
-	if(-1 == unlink(PIDFILE)) WARN("Can't delete PIDfile");
-	return -1;
+}
+
+int main(int argc, char **argv){
+	// setup coloured output
+	initial_setup();
+	check4running(argv, NULL, NULL);
+	/*
+	 * To run in GUI bullshit (like qt or gtk) you must do:
+	 * bind_textdomain_codeset(PACKAGE, "UTF8");
+	 */
+	Global_parameters = parce_args(argc, argv);
+	assert(Global_parameters != NULL);
+	DBG("videodev: %s, channel: %d\n", Global_parameters->videodev, Global_parameters->videochannel);
+	DBG("list: %d\n", Global_parameters->listchannels);
+	if(Global_parameters->listchannels){
+		list_all_inputs(Global_parameters->videodev);
+		return 0;
+	}
+
+	signal(SIGTERM, signals); // kill (-15) - quit
+	signal(SIGHUP, SIG_IGN);  // hup - ignore
+	signal(SIGINT, signals);  // ctrl+C - quit
+	signal(SIGQUIT, signals); // ctrl+\ - quit
+	signal(SIGTSTP, SIG_IGN); // ignore ctrl+Z
+
+#ifndef EBUG // daemonize only in release mode
+	if(!Global_parameters->nodaemon){
+		if(daemon(1, 0)){
+			perror("daemon()");
+			exit(1);
+		}
+	}
+#endif // EBUG
+	while(1){
+		pid_t childpid = fork();
+		if(childpid){
+			DBG("Created child with PID %d\n", childpid);
+			wait(NULL);
+			printf("Child %d died\n", childpid);
+		}else{
+			prctl(PR_SET_PDEATHSIG, SIGTERM); // send SIGTERM to child when parent dies
+			main_proc();
+			return 0;
+		}
+	}
+	return 0;
 }

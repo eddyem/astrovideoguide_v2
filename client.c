@@ -59,7 +59,7 @@ glob_pars Gdefault = {
 	.istart = 1,
 	.nframes = 3,
 	.host = "localhost",
-	.port = "9999",
+	.port = "54321",
 	.format = "jpg"
 };
 

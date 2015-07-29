@@ -7,7 +7,7 @@
 msgid   ""
 msgstr  "Project-Id-Version: PACKAGE VERSION\n"
         "Report-Msgid-Bugs-To: \n"
-        "POT-Creation-Date: 2015-06-24 09:56+0300\n"
+        "POT-Creation-Date: 2015-07-29 15:47+0300\n"
         "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
         "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
         "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,7 +26,7 @@ msgid   "Can't close mmap'ed file"
 msgstr  "Не могу закрыть ммапнутый файл"
 
 #. / "Не могу создать поток для захвата видео"
-#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/main.c:252
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/main.c:222
 #, fuzzy
 msgid   "Can't create readout thread"
 msgstr  "Не могу захватить очередной кадр"
@@ -67,7 +67,7 @@ msgid   "Can't open device"
 msgstr  "Не могу открыть устройство"
 
 #. / "Не могу подготовить видеоустройство к работе"
-#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/main.c:248
+#: /home/eddy/Docs/SAO/Raspberry/astrovideoguide_v2/main.c:218
 msgid   "Can't prepare video device"
 msgstr  "Не могу подготовить видеоустройство к работе"
 

@@ -1,21 +1,58 @@
 <html>
 <head><title>Simple streaming test</title>
 <script>
+	const framepause = 50; // minimal pause between subsequent frames
+	function gettime(){
+		var d = new Date();
+		var T = d.getTime();
+		delete d;
+		return T;
+	}
+	var frames = 0;
+	var T0 = gettime();
 	var img = new Image();
 	var iterator = 1;
-	var tmout;
+	var tmout, faulttmout;
+	var started = 1;
 	img.onload = function(){
+		var T1 = gettime();
 		document.getElementById("animage").src = img.src;
 		clearTimeout(tmout);
-		tmout = setTimeout(stream_next, 50);
+		if(started)
+			tmout = setTimeout(stream_next, framepause);
+		var F = (++frames)/(T1-T0)*1000;
+		document.getElementById("frmrt").innerHTML = Math.round(F*10)/10;
+	}
+	function missed_server(){
+		frames = 0; // clear framerate counters
+		T0 = gettime();
+		stream_next();
 	}
 	function stream_next(){
+		clearTimeout(faulttmout);
+		faulttmout = setTimeout(missed_server, 1000); // try to reload if fault
 		img.src = "http://localhost:54321/" + (iterator++) + ".jpg";
+	}
+	function startstop(){
+		started = !started;
+		if(started){
+			T0 = gettime();
+			frames = 0;
+			tmout = setTimeout(stream_next, framepause);
+			document.getElementById("startstop").innerHTML = "Stop";
+		}else{
+			clearTimeout(faulttmout);
+			clearTimeout(tmout);
+			document.getElementById("startstop").innerHTML = "Start";
+			document.getElementById("frmrt").innerHTML = "0";
+		}
 	}
 </script>
 </head>
 <body onload="stream_next();">
+<div>Framerate: <span id="frmrt">0</span>fps</div>
 <img id="animage">
+<div><button id="startstop" onclick="startstop();">Stop</button></div>
 </body>
 </html>
 

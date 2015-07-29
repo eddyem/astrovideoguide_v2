@@ -7,7 +7,4 @@ Supporting formats (all RGB, 8bit): raw, jpg, png
 
 Run tvguide & open streamtest.html to see testing videostreamer by simple jpegs
 
-
 tested on ffmpeg-1:2.1.1-2
-need to be controlled by respawn daemon because of error (after a couple of minutes):
-Assertion atomic_int_get_gcc(&s->buffers_queued) >= 1 failed at libavdevice/v4l2.c:516
