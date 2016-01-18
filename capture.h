@@ -30,6 +30,7 @@
 	#define MAX_READING_TRIES		10
 #endif
 
+extern int videodev_prepared;
 int prepare_videodev(char *dev, int channel);
 void list_all_inputs(char *dev);
 uint8_t *capture_frame();

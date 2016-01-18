@@ -8,6 +8,7 @@
 		delete d;
 		return T;
 	}
+	function $(x){return document.getElementById(x);}
 	var frames = 0;
 	var T0 = gettime();
 	var img = new Image();
@@ -28,10 +29,60 @@
 		T0 = gettime();
 		stream_next();
 	}
+	function sendrequest(CGI_PATH, fn_OK){
+		var timeout_id, str;
+		var request = new XMLHttpRequest();
+		request.open("POST", CGI_PATH, true);
+	//	request.setRequestHeader("Accept-Charset", "koi8-r");
+	//	request.overrideMimeType("text/html;");
+		request.onreadystatechange = function(){
+			if(request.readyState == 4){
+				if(request.status == 200){
+					clearTimeout(timeout_id);
+					fn_OK(request.responseText);
+				}
+				else{
+					clearTimeout(timeout_id);
+					console.log("Error: can't connect to data server, status: " + request.status
+						+ ", text: " + request.responseText);
+				}
+			}
+		}
+		request.send(null);
+		timeout_id = setTimeout(function(){
+				request.onreadystatechange=null; request.abort();
+			}, 1500);
+		delete(request);
+	}
+	var URL = "";
+	function get_url(){
+		if(URL != "") return URL;
+		var u = document.URL;
+		if (u.substring(0, 5) == "https") {
+			u = u.substr(8);
+		} else {
+			if (u.substring(0, 4) == "http")
+				u = u.substr(7);
+		}
+		u = u.split('/');
+		URL = u[0];
+		delete(u);
+		return URL;
+	}
+	var nfrini = 0;
+	function init_nframes(reqtext){
+		nfrini = 1;
+		if(reqtext.substring(0,4) == "sum="){
+			$("nframes").value = reqtext.substring(4);
+		}
+	}
 	function stream_next(){
+		if(!nfrini){
+			sendrequest("http://" + get_url()  + ":54321/" + "sum=x", init_nframes);
+		}
 		clearTimeout(faulttmout);
 		faulttmout = setTimeout(missed_server, 1000); // try to reload if fault
-		img.src = "http://localhost:54321/" + (iterator++) + ".jpg";
+		img.src = "http://" + get_url() + ":54321/" + (iterator++) + ".jpg";
 	}
 	function startstop(){
 		started = !started;
@@ -47,12 +98,16 @@
 			document.getElementById("frmrt").innerHTML = "0";
 		}
 	}
+	function refreshnsum(){
+		sendrequest("http://" + get_url()  + ":54321/" + "sum=" + $("nframes").value, init_nframes);
+	}
 </script>
 </head>
 <body onload="stream_next();">
 <div>Framerate: <span id="frmrt">0</span>fps</div>
 <img id="animage">
-<div><button id="startstop" onclick="startstop();">Stop</button></div>
+<div><button id="startstop" onclick="startstop();">Stop</button>&nbsp;
+Sum <input type="text" id="nframes" size="3"> frames<button id="setframesum" onclick="refreshnsum()">Set</button></div>
 </body>
 </html>
 

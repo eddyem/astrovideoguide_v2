@@ -35,6 +35,7 @@ typedef struct{
 	int listchannels;       // show avaiable channels on given device
 	int nodaemon;           // not daemonize
 	char *port;             // port number
+	int nsum;               // sum N images
 }glob_pars;
 
 glob_pars *parce_args(int argc, char **argv);

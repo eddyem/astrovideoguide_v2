@@ -43,7 +43,7 @@ extern void check4running(char **argv, char *pidfilename, void (*iffound)(pid_t 
 glob_pars *Global_parameters = NULL;
 
 pthread_mutex_t readout_mutex = PTHREAD_MUTEX_INITIALIZER;
-uint8_t *frame;
+uint8_t *frame = NULL;
 int w, h;
 
 typedef enum{
@@ -71,12 +71,33 @@ static void signals(_U_ int sig){
 static volatile uint64_t imctr = 0; // frame counter (we need it to know that there's some new frames)
 void *read_buf(_U_ void *buf){
 	while(!global_quit){
+		if(!videodev_prepared){
+			if(!prepare_videodev(Global_parameters->videodev, Global_parameters->videochannel)){
+				int i;
+				char buf[128];
+				for(i = 0; i < 256; ++i){
+					snprintf(buf, 128, "/dev/video%d", i);
+					if(prepare_videodev(buf, Global_parameters->videochannel))
+						break;
+				}
+				if(i == 256){
+					/// "Не могу подготовить видеоустройство к работе"
+					ERR(_("Can't prepare video device"));
+				}
+			}
+		}
 		pthread_mutex_lock(&readout_mutex);
-		while(!(frame = capture_frame(&w, &h)));
-		//	ERR(_("Error capturing!"));
-		imctr++;
+		uint8_t *capt;
+		if((capt = capture_frame(&w, &h))){
+			imctr++;
+			FREE(frame);
+			size_t s = w*h;
+			frame = MALLOC(uint8_t, s);
+			memcpy(frame, capt, s);
+			//DBG("imctr: %zd", imctr);
+		}
 		pthread_mutex_unlock(&readout_mutex);
-		usleep(1000);
+		usleep(100);
 	}
 	return NULL;
 }
@@ -150,12 +171,22 @@ void send_image(int strip, imagetype imtype, int sockfd){
 	FREE(buff);
 }
 
+int myatoi(char *str, int *iret){
+	long tmp;
+	char *endptr;
+	tmp = strtol(str, &endptr, 0);
+	if(endptr == str || *str == '\0' || *endptr != '\0')
+		return 0;
+	*iret = (int) tmp;
+	return 1;
+}
+
 void *handle_socket(void *asock){
 	//FNAME();
 	if(global_quit) return NULL;
 	int sock = *((int*)asock);
 	int webquery = 0; // whether query is web or regular
-	uint64_t oldimctr = 0;
+	static uint64_t oldimctr = 0;
 	char buff[BUFLEN+1], *bufptr;
 	imagetype imtype = IMTYPE_NONE;
 	ssize_t readed;
@@ -173,32 +204,53 @@ void *handle_socket(void *asock){
 	//	DBG("get %zd bytes: %s", readed, buff);
 		// now we should check what do user want
 		char *got, *found = NULL;
-		if((got = stringscan(buff, "GET"))){ // web query
+		DBG("Buff: %s", buff);
+		if((got = stringscan(buff, "GET")) || (got = stringscan(buff, "POST")) ||
+			(got = stringscan(buff, "PUT"))){ // web query
 			webquery = 1;
-	//		DBG("Web query:\n%s\n", got);
+			//DBG("Web query:\n%s\n", got);
 			// web query have format GET /anyname.suffix, where suffix defines file type
-			if(*got != '/')
-				break;
-			if(!(found = strrchr(got, '.')) || !(found[1]))
-				break;
-			found++;
+			if(!(found = strstr(got, "sum="))){
+				if(*got != '/')
+					break;
+				if(!(found = strrchr(got, '.')) || !(found[1]))
+					break;
+				++found;
+			}
 		}else{ // regular query
 			found = buff;
 		}
-	//	DBG("message: %s", found);
+		//DBG("message: %s", found);
+		if(strncmp(found, "sum=", 4) == 0){
+				int x;
+				if(myatoi(found + 4, &x)){
+					if(x > 0 && x < 255)
+						Global_parameters->nsum = x;
+				}
+				size_t sumlen = snprintf(buff, BUFLEN, "sum=%d", Global_parameters->nsum);
+				size_t L = snprintf(buff, BUFLEN,
+					"HTTP/2.0 200 OK\r\n"
+					"Access-Control-Allow-Origin: *\r\n"
+					"Access-Control-Allow-Methods: GET, POST\r\n"
+					"Access-Control-Allow-Credentials: true\r\n"
+					"Content-type: multipart/form-data\r\nContent-Length: %zd\r\n\r\n"
+					"sum=%d", sumlen,
+					Global_parameters->nsum);
+				write(sock, buff, L);
+				DBG("%s", buff);
+				break;
+			}
 		int i = 0;
+		imtype = IMTYPE_NONE;
 		do{
 			if(strcasecmp(found, imsuffixes[i]) == 0){
 				imtype = suffixtypes[i];
 				break;
 			}
 		}while(imsuffixes[++i]);
-		if(imtype == IMTYPE_NONE){
-			DBG("none");
-			break;
-		}
 		// OK, now we now what user want. Send to him his image file
 		while(oldimctr == imctr); // wait for buffer update
+		oldimctr = imctr;
 		send_image(webquery, imtype, sock);
 		if(webquery) break; // close connection if this is a web query
 	}
@@ -213,10 +265,6 @@ static inline void main_proc(){
 	int sock;
 	struct addrinfo hints, *res, *p;
 	int reuseaddr = 1;
-	if(!prepare_videodev(Global_parameters->videodev, Global_parameters->videochannel)){
-		/// "Не могу подготовить видеоустройство к работе"
-		ERR(_("Can't prepare video device"));
-	}
 	if(pthread_create(&readout_thread, NULL, read_buf, NULL)){
 		/// "Не могу создать поток для захвата видео"
 		ERR(_("Can't create readout thread"));

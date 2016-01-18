@@ -43,6 +43,7 @@
 int videoStream;
 AVFormatContext *pFormatCtx = NULL;
 uint8_t *buffer = NULL;
+uint32_t *Imstorage = NULL;
 AVFrame *pFrame = NULL;
 AVFrame *pFrameRGB = NULL;
 AVCodecContext *pCodecCtx = NULL;
@@ -252,9 +253,11 @@ int prepare_videodev(char *videodev, int channel){
 	assert(pFrameRGB != NULL);
 
 	// Determine required buffer size and allocate buffer
-	numBytes = avpicture_get_size(PIX_FMT_RGB24, pCodecCtx->width,
+	numBytes = avpicture_get_size(AV_PIX_FMT_GRAY8, pCodecCtx->width,
 			pCodecCtx->height);
 	buffer = (uint8_t *)av_malloc(numBytes*sizeof(uint8_t));
+	Imstorage = (uint32_t *)av_malloc(numBytes*sizeof(uint32_t));
+	DBG("alloc: %dx%d, full size: %d", pCodecCtx->width, pCodecCtx->height, numBytes);
 	assert(buffer != NULL);
 
 	sws_ctx = sws_getContext(
@@ -263,7 +266,7 @@ int prepare_videodev(char *videodev, int channel){
 		pCodecCtx->pix_fmt,
 		pCodecCtx->width,
 		pCodecCtx->height,
-		PIX_FMT_RGB24,
+		AV_PIX_FMT_GRAY8,
 		SWS_BILINEAR,
 		NULL,
 		NULL,
@@ -274,7 +277,7 @@ int prepare_videodev(char *videodev, int channel){
 	// Assign appropriate parts of buffer to image planes in pFrameRGB
 	// Note that pFrameRGB is an AVFrame, but AVFrame is a superset
 	// of AVPicture
-	avpicture_fill((AVPicture *)pFrameRGB, buffer, PIX_FMT_RGB24,
+	avpicture_fill((AVPicture *)pFrameRGB, buffer, AV_PIX_FMT_GRAY8,
 		 pCodecCtx->width, pCodecCtx->height);
 	videodev_prepared = 1;
 	return 1;
@@ -287,7 +290,8 @@ int prepare_videodev(char *videodev, int channel){
  * !!! DON'T even try to free returned data !!!
  */
 uint8_t *capture_frame(int *w, int *h){
-	int i, r, frameFinished;
+	int i, r, frameFinished, hh = 0, ww = 0;
+	static int ncaptured = 0;
 //	size_t S;
 	uint8_t *ret = NULL;
 	if(!videodev_prepared){
@@ -309,6 +313,7 @@ uint8_t *capture_frame(int *w, int *h){
 	if(r < 0){
 		char errbuff[256];
 		av_strerror(r, errbuff, 255);
+		videodev_prepared = 0;
 		/// "Не могу захватить очередной кадр"
 		WARNX("%s: %s!", _("Can't capture next frame"), errbuff);
 		return NULL;
@@ -343,6 +348,18 @@ uint8_t *capture_frame(int *w, int *h){
 			ret = (uint8_t*) pFrameRGB->data[0];
 			if(w) *w = pCodecCtx->width;
 			if(h) *h = pCodecCtx->height;
+			ww = pCodecCtx->width;
+			hh = pCodecCtx->height;
+			if(Global_parameters->nsum > 1){
+				int x,y;
+				uint32_t *optr = Imstorage;
+				uint8_t *iptr = ret;
+				for(y = 0; y < hh; ++y){
+					for(x = 0; x < ww; ++x, ++optr, ++iptr){
+						*optr += *iptr;
+					}
+				}
+			}
 		}else{
 			/// "Не могу декодировать видеокадр"
 			WARNX(_("Can't decode video frame!"));
@@ -353,7 +370,34 @@ uint8_t *capture_frame(int *w, int *h){
 	}
 	// Free the packet that was allocated by av_read_frame
 	av_free_packet(&packet);
-	return ret;
+	if(Global_parameters->nsum == 1) return ret;
+	if(++ncaptured >= Global_parameters->nsum){
+		ncaptured = 0;
+		int x,y;
+		uint32_t min = *Imstorage, max = min;
+		uint32_t *iptr = Imstorage;
+		for(y = 0; y < hh; ++y){
+			for(x = 0; x < ww; ++x, ++iptr){
+				uint32_t pix = *iptr;
+				if(pix > max) max = pix;
+				else if(pix < min) min = pix;
+			}
+		}
+		uint32_t w = max - min;
+	//	DBG("scales: min = %d, max = %d, w = %d", min, max, w);
+		if(w > 0){
+			iptr = Imstorage;
+			uint8_t *optr = ret;
+			for(y = 0; y < hh; ++y){
+				for(x = 0; x < ww; ++x, ++optr, ++iptr){
+					*optr = (uint8_t)(((*iptr - min) * 255) / w);
+				}
+			}
+			memset(Imstorage, 0, sizeof(uint32_t) * ww * hh);
+		}
+		return ret;
+	}
+	return NULL;
 }
 
 /**
@@ -383,8 +427,8 @@ struct mem_encode{
 };
 
 void my_png_write_data(png_structp png_ptr, png_bytep data, png_size_t length){
-	FNAME();
-	struct mem_encode* p=(struct mem_encode*)png_get_io_ptr(png_ptr); /* was png_ptr->io_ptr */
+//	FNAME();
+	struct mem_encode* p=(struct mem_encode*)png_get_io_ptr(png_ptr);
 	size_t nsize = p->size + length;
 	p->buffer = realloc(p->buffer, nsize);
 	if(!p->buffer)
@@ -413,7 +457,7 @@ uint8_t *getpng(size_t *size, int w, int h, uint8_t *data){
 	}
 	png_set_compression_level(pngptr, 1);
 
-	png_set_IHDR(pngptr, infoptr, w, h, 8, PNG_COLOR_TYPE_RGB,
+	png_set_IHDR(pngptr, infoptr, w, h, 8, PNG_COLOR_TYPE_GRAY,
 				PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
 				PNG_FILTER_TYPE_DEFAULT);
 	png_write_info(pngptr, infoptr);
@@ -433,7 +477,7 @@ uint8_t *getpng(size_t *size, int w, int h, uint8_t *data){
 
 uint8_t *getjpg(size_t *size, int w, int h, uint8_t *data){
 	uint8_t *outbuf = NULL;
-	size_t outlen;
+	long unsigned int outlen;
 	uint8_t *row;
 	*size = 0;
 	struct jpeg_compress_struct cinfo;
@@ -443,13 +487,14 @@ uint8_t *getjpg(size_t *size, int w, int h, uint8_t *data){
 	jpeg_mem_dest(&cinfo, &outbuf, &outlen);
 	cinfo.image_width      = w;
 	cinfo.image_height     = h;
-	cinfo.input_components = 3;
-	cinfo.in_color_space   = JCS_RGB;
+	cinfo.input_components = 1;
+	cinfo.in_color_space   = JCS_GRAYSCALE;
 	jpeg_set_defaults(&cinfo);
 	jpeg_set_quality (&cinfo, 60, 1);
 	jpeg_start_compress(&cinfo, 1);
 	JSAMPROW row_pointer;
-	w *= 3;
+	//DBG("make JPEG: %dx%d", w, h);
+	//w *= 3;
 	int H;
 	//for(row = &data[w*(h-1)]; h > 0; row -= w, h--){
 	for(row = data, H=0; H < h; row += w, H++){

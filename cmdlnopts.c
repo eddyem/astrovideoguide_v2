@@ -33,6 +33,7 @@ glob_pars Gdefault = {
 	.listchannels    = FALSE,
 	.nodaemon        = FALSE,
 	.port            = "54321",
+	.nsum            = 1,
 };
 
 /*
@@ -50,6 +51,8 @@ myoption cmdlnopts[] = {
 	{"list-channels",0,NULL,'l',	arg_none,	APTR(&G.listchannels),N_("list avaiable channels")},
 	/// "не переходить в фоновый режим"
 	{"foreground",0,NULL, 'f',		arg_none,	APTR(&G.nodaemon),	N_("work in foreground")},
+	/// суммировать N изображений
+	{"sum",		1,	NULL,	's',	arg_int,	APTR(&G.nsum),		N_("sum N images")},
 	/// "номер порта"
 	{"port",	1,	NULL,	'p',	arg_string,	APTR(&G.port),		N_("port number")},
 	// ...
