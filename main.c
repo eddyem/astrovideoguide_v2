@@ -236,7 +236,7 @@ void *handle_socket(void *asock){
 					"Content-type: multipart/form-data\r\nContent-Length: %zd\r\n\r\n"
 					"sum=%d", sumlen,
 					Global_parameters->nsum);
-				write(sock, buff, L);
+				if(L != (size_t)write(sock, buff, L)) perror("write");
 				DBG("%s", buff);
 				break;
 			}
